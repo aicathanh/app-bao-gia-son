@@ -231,7 +231,7 @@ const App = () => {
                                 <th width="110">Đơn Giá</th>
                                 <th width="50">SL</th>
                                 <th width="125">Thành tiền</th>
-                                <th width="100">Ghi chú</th>
+                                <th width="200">Ghi chú</th>
                                 <th className="no-print" width="30"></th>
                             </tr>
                         </thead>
@@ -317,7 +317,7 @@ const App = () => {
                             {/* Discount Row */}
                             {discount.visible && (
                                 <tr className="discount-row">
-                                    <td colSpan="2" align="right" style={{paddingRight: '15px', color: '#E53E3E', fontWeight: '700', textTransform: 'uppercase'}}>GIẢM GIÁ (Trừ vào tổng)</td>
+                                    <td colSpan="2" align="right" style={{paddingRight: '15px', color: '#E53E3E', fontWeight: '700', textTransform: 'uppercase'}}>GIẢM GIÁ</td>
                                     <td colSpan="4"></td>
                                     <td align="right">
                                         <div style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#E53E3E', fontWeight: 'bold'}}>
