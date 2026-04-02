@@ -262,7 +262,7 @@ const App = () => {
                                 return (
                                     <tr key={item.id}>
                                         <td align="center">{index + 1}</td>
-                                        <td style={{padding: '3px 15px', verticalAlign: 'middle', borderRight: 'none'}}>
+                                        <td style={{padding: '3px 15px', verticalAlign: 'middle'}}>
                                             <div style={{display: 'flex', flexDirection: 'column', gap: '1px'}}>
                                                 <input 
                                                     type="text"
@@ -291,7 +291,7 @@ const App = () => {
                                                 {products.map(p => (<option key={p.id} value={p.name} />))}
                                             </datalist>
                                         </td>
-                                        <td style={{borderLeft: 'none'}}>
+                                        <td>
                                             {item.productId ? (
                                                 <select 
                                                     className="product-select"
