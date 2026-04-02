@@ -170,10 +170,11 @@ const App = () => {
                         />
                     </div>
                     <div className="company-info" style={{textAlign: 'right', fontSize: '10px'}}>
-                        <div className="company-name" style={{fontWeight: 'bold', color: '#2F855A', fontSize: '11px'}}>CÔNG TY TNHH SX TM DV BÍCH TRANG</div>
-                        <div>MST: 0313351528 | Hotline: 0943 966 662</div>
-                        <div>Đ/c: 99/5 Đường XTT26-1, Hóc Môn, TP.HCM</div>
-                        <div>https://jades.vn | Email: sales@sonlotus.vn</div>
+                        <div className="company-name" style={{fontWeight: 'bold', color: '#2F855A', fontSize: '11px'}}>CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</div>
+                        <div>MST: 0313351528</div>
+                        <div>Đ/c: 99/5 Đường XTT26-1, Ấp 2, Xã Bà Điểm, TP.HCM</div>
+                        <div>Email: sales@sonlotus.vn | Hotline: 0943 966 662</div>
+                        <div>www.sonlotus.vn</div>
                     </div>
                 </div>
 
