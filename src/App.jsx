@@ -240,7 +240,7 @@ const App = () => {
                             <tr>
                                 <th width="35">STT</th>
                                 <th style={{textAlign: 'left', paddingLeft: '15px'}}>Tên sản phẩm</th>
-                                <th width="80">K.Lượng (Kg)</th>
+                                <th width="80">K.L/Thùng (Kg)</th>
                                 <th width="60">ĐVT</th>
                                 <th width="110">Đơn Giá</th>
                                 <th width="50">SL</th>
