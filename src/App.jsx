@@ -38,7 +38,9 @@ const App = () => {
         phone: ''
     });
 
-    const [shippingCost, setShippingCost] = useState(0);
+    const [shipping, setShipping] = useState({ value: 0, note: '', visible: true });
+    const [discount, setDiscount] = useState({ value: 0, note: '', visible: true });
+
 
     const [items, setItems] = useState([
         { id: 1, productId: '', size: '1', quantity: 1, note: '' }
@@ -97,8 +99,9 @@ const App = () => {
     };
 
     const subtotal = calculateSubtotal();
-    const vat = subtotal * 0.08;
-    const grandTotal = subtotal + vat;
+    // Since prices already include VAT per the footer note, we don't need to add it again
+    const grandTotal = subtotal + (shipping.visible ? shipping.value : 0) - (discount.visible ? discount.value : 0);
+
 
     const formatCurrency = (num) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
@@ -108,9 +111,11 @@ const App = () => {
         const data = {
             customer,
             items,
-            shippingCost,
+            shipping,
+            discount,
             date: today,
-            grandTotal: grandTotal + shippingCost
+            grandTotal: grandTotal
+
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -287,35 +292,81 @@ const App = () => {
                                 )
                             })}
                             {/* Shipping Cost Row */}
-                            <tr className="shipping-row">
-                                <td colSpan="6" align="right" style={{paddingRight: '15px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase'}}>CHI PHÍ VẬN CHUYỂN</td>
-                                <td align="right">
-                                    <div style={{display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline'}}>
+                            {shipping.visible && (
+                                <tr className="shipping-row">
+                                    <td colSpan="2" align="right" style={{paddingRight: '15px', color: '#64748b', fontWeight: '700', textTransform: 'uppercase'}}>CHI PHÍ VẬN CHUYỂN</td>
+                                    <td colSpan="4"></td>
+                                    <td align="right">
                                         <input 
                                             type="text" 
                                             className="number-input" 
-                                            style={{textAlign: 'right', fontWeight: 'bold', border: 'none', background: 'transparent', width: '100%'}} 
-                                            value={shippingCost > 0 ? shippingCost.toLocaleString('vi-VN') : ''} 
-                                            onChange={(e) => setShippingCost(parseInt(e.target.value.replace(/\D/g, '')) || 0)} 
+                                            style={{textAlign: 'right', fontWeight: 'bold', border: 'none', background: 'transparent', width: '100%', color: '#1A365D'}} 
+                                            value={shipping.value > 0 ? shipping.value.toLocaleString('vi-VN') : ''} 
+                                            onChange={(e) => setShipping({...shipping, value: parseInt(e.target.value.replace(/\D/g, '')) || 0})} 
                                         />
-                                    </div>
-                                </td>
-                                <td></td>
-                                <td className="no-print"></td>
-                            </tr>
+                                    </td>
+                                    <td>
+                                        <input type="text" className="number-input" placeholder="..." value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} style={{textAlign: 'left'}} />
+                                    </td>
+                                    <td className="no-print" align="center">
+                                        <button className="remove-btn" onClick={() => setShipping({...shipping, visible: false, value: 0})} title="Xoá vận chuyển"><Trash2 size={12} /></button>
+                                    </td>
+                                </tr>
+                            )}
+
+                            {/* Discount Row */}
+                            {discount.visible && (
+                                <tr className="discount-row">
+                                    <td colSpan="2" align="right" style={{paddingRight: '15px', color: '#E53E3E', fontWeight: '700', textTransform: 'uppercase'}}>GIẢM GIÁ (Trừ vào tổng)</td>
+                                    <td colSpan="4"></td>
+                                    <td align="right">
+                                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', color: '#E53E3E', fontWeight: 'bold'}}>
+                                            <span>-</span>
+                                            <input 
+                                                type="text" 
+                                                className="number-input" 
+                                                style={{textAlign: 'right', fontWeight: 'bold', border: 'none', background: 'transparent', width: '90%', color: '#E53E3E'}} 
+                                                value={discount.value > 0 ? discount.value.toLocaleString('vi-VN') : ''} 
+                                                onChange={(e) => setDiscount({...discount, value: parseInt(e.target.value.replace(/\D/g, '')) || 0})} 
+                                            />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" className="number-input" placeholder="..." value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} style={{textAlign: 'left'}} />
+                                    </td>
+                                    <td className="no-print" align="center">
+                                        <button className="remove-btn" onClick={() => setDiscount({...discount, visible: false, value: 0})} title="Xoá giảm giá"><Trash2 size={12} /></button>
+                                    </td>
+                                </tr>
+                            )}
+
                         </tbody>
                     </table>
-                    <button className="btn btn-success no-print" onClick={addItem} style={{marginTop: '5px', padding: '5px 15px'}}>
-                        <Plus size={14} /> Thêm sản phẩm
-                    </button>
+                    <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
+                        <button className="btn btn-success no-print" onClick={addItem} style={{padding: '5px 15px'}}>
+                            <Plus size={14} /> Thêm sản phẩm
+                        </button>
+                        {!shipping.visible && (
+                            <button className="btn no-print" onClick={() => setShipping({...shipping, visible: true})} style={{padding: '5px 15px', background: '#e2e8f0', color: '#475569', fontSize: '12px', fontWeight: '600'}}>
+                                <Plus size={12} /> Thêm Vận Chuyển
+                            </button>
+                        )}
+                        {!discount.visible && (
+                            <button className="btn no-print" onClick={() => setDiscount({...discount, visible: true})} style={{padding: '5px 15px', background: '#fed7d7', color: '#c53030', fontSize: '12px', fontWeight: '600'}}>
+                                <Plus size={12} /> Thêm Giảm Giá
+                            </button>
+                        )}
+                    </div>
+
                 </div>
 
                 {/* Summary Section - Premium UI */}
                 <div className="summary-section">
                     <div className="total-row">
                         <span className="total-label" style={{fontSize: '16px'}}>TỔNG THÀNH TIỀN:</span>
-                        <span className="total-value" style={{fontSize: '20px', marginLeft: '10px'}}>{formatCurrency(subtotal + shippingCost)}</span>
+                        <span className="total-value" style={{fontSize: '20px', marginLeft: '10px'}}>{formatCurrency(grandTotal)}</span>
                     </div>
+
                 </div>
 
                 {/* Footer Notes - Formal Styling */}

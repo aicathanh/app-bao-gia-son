@@ -218,15 +218,21 @@ input[type=number] {
   color: #4a5568;
 }
 
-.shipping-row td {
+.shipping-row td, .discount-row td {
   padding: 4px 10px !important;
   font-size: 13px !important;
 }
 
-.shipping-row input {
+.shipping-row input, .discount-row input {
   font-size: 13px !important;
   height: 24px;
 }
+
+.discount-row {
+  background-color: #fff5f5;
+  font-weight: 700;
+}
+
 
 .summary-section {
   border-top: 2px solid #2d3748;
