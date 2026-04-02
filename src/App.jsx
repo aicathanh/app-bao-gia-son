@@ -496,13 +496,15 @@ const App = () => {
 
             <style>{`
                 @media print {
-                    .no-print { display: none !important; }
+                    @page { size: landscape; margin: 10mm; }
+                    .no-print, .remove-btn { display: none !important; }
                     body { background: white; }
-                    .app-container { box-shadow: none; border: none; padding: 0; margin: 0; width: 100% !important;}
+                    .app-container { box-shadow: none; border: none; padding: 0; margin: 0; width: 100% !important; max-width: 100% !important;}
                     .container { padding: 0; }
                     .action-buttons { display: none; }
-                    select, input { border: none !important; appearance: none; -webkit-appearance: none; }
+                    select, input, textarea { border: none !important; appearance: none; -webkit-appearance: none; background: transparent !important; }
                 }
+
                 .container {
                     display: flex;
                     flex-direction: column;

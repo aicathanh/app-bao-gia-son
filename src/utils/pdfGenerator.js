@@ -31,19 +31,19 @@ export const exportToPDF = async (elementId, filename = 'Bao_Gia.pdf') => {
     });
 
     
-    const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
-      orientation: 'portrait',
+      orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
 
-    const imgWidth = 210;
-    const pageHeight = 297;
+    const imgWidth = 297; // A4 Landscape width
+    const pageHeight = 210; // A4 Landscape height
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
     pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
     pdf.save(filename);
+
   } catch (error) {
     console.error('PDF Generation error:', error);
   } finally {
