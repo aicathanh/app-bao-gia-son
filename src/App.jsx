@@ -9,7 +9,8 @@ import logoSrc from './assets/logo.png';
 
 const App = () => {
     // ... rest of the App ...
-    const defaultItem = { productId: '', size: '5', quantity: 1, note: '' };
+    const defaultItem = { productId: '', size: '5', quantity: 1, note: '', customName: '', customPrice: 0 };
+
     const getAbbreviation = (name) => {
         if (!name) return 'XYZ';
         // Remove Vietnamese accents to get clean abbreviations
@@ -43,8 +44,9 @@ const App = () => {
 
 
     const [items, setItems] = useState([
-        { id: 1, productId: '', size: '1', quantity: 1, note: '' }
+        { id: 1, productId: '', size: '1', quantity: 1, note: '', customName: '', customPrice: 0 }
     ]);
+
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
 
     const products = productData.products;
@@ -80,10 +82,14 @@ const App = () => {
         }));
     };
 
-    const getPrice = (productId, size) => {
-        const product = products.find(p => p.id === parseInt(productId));
-        return product ? product.p_prices[size] || 0 : 0;
+    const getPrice = (item) => {
+        if (item.productId) {
+            const product = products.find(p => p.id === parseInt(item.productId));
+            return product ? product.p_prices[item.size] || 0 : 0;
+        }
+        return item.customPrice || 0;
     };
+
 
     // Helper to get sizes for a product
     const getAvailableSizes = (productId) => {
@@ -93,10 +99,11 @@ const App = () => {
 
     const calculateSubtotal = () => {
         return items.reduce((sum, item) => {
-            const price = getPrice(item.productId, item.size);
+            const price = getPrice(item);
             return sum + (price * item.quantity);
         }, 0);
     };
+
 
     const subtotal = calculateSubtotal();
     // Since prices already include VAT per the footer note, we don't need to add it again
@@ -237,10 +244,11 @@ const App = () => {
                         </thead>
                         <tbody>
                             {items.map((item, index) => {
-                                const price = getPrice(item.productId, item.size);
+                                const price = getPrice(item);
                                 const amount = price * item.quantity;
                                 const selectedProduct = products.find(p => p.id === parseInt(item.productId));
-                                const productName = selectedProduct?.name || '';
+                                const productName = selectedProduct ? selectedProduct.name : item.customName;
+
                                 return (
                                     <tr key={item.id}>
                                         <td align="center">{index + 1}</td>
@@ -253,9 +261,17 @@ const App = () => {
                                                     list={`list-${item.id}`}
                                                     value={productName}
                                                     onChange={(e) => {
-                                                        const selected = products.find(p => p.name === e.target.value);
-                                                        if (selected) updateItem(item.id, 'productId', selected.id);
+                                                        const val = e.target.value;
+                                                        const selected = products.find(p => p.name === val);
+                                                        if (selected) {
+                                                            updateItem(item.id, 'productId', selected.id);
+                                                            updateItem(item.id, 'customName', '');
+                                                        } else {
+                                                            updateItem(item.id, 'productId', '');
+                                                            updateItem(item.id, 'customName', val);
+                                                        }
                                                     }}
+
                                                     style={{width: '100%', border: 'none', borderBottom: '1px dashed #cbd5e0', padding: '0', height: '18px'}}
                                                 />
                                                 <div style={{fontWeight: '700', lineHeight: '1.2', color: '#1a365d', wordBreak: 'break-word', whiteSpace: 'normal', display: 'block'}}>
@@ -277,7 +293,21 @@ const App = () => {
                                             </select>
                                         </td>
                                         <td align="center">Thùng</td>
-                                        <td align="right" style={{color: '#2d3748'}}>{formatCurrency(price)}</td>
+                                        <td align="right" style={{color: '#2d3748'}}>
+                                            {item.productId ? (
+                                                formatCurrency(price)
+                                            ) : (
+                                                <input 
+                                                    type="text" 
+                                                    className="number-input" 
+                                                    style={{textAlign: 'right', border: 'none', background: '#fffbeb'}} 
+                                                    placeholder="Nhập giá..."
+                                                    value={item.customPrice > 0 ? item.customPrice.toLocaleString('vi-VN') : ''}
+                                                    onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/\D/g, '')) || 0)}
+                                                />
+                                            )}
+                                        </td>
+
                                         <td align="center">
                                             <input type="number" className="number-input" min="1" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)} style={{textAlign: 'center'}} />
                                         </td>
