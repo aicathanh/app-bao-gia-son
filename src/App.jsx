@@ -455,7 +455,7 @@ const App = () => {
                             />
                         </div>
                         <div style={{textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', paddingTop: '5px'}}>
-                            <div style={{fontStyle: 'italic', color: '#64748b', marginBottom: '60px'}}>Đại diện công ty Bích Trang</div>
+                            <div style={{fontStyle: 'italic', color: '#64748b', marginBottom: '60px'}}>Đại Diện Kinh Doanh</div>
                             <div style={{fontWeight: '900', textTransform: 'uppercase', color: '#1A365D'}}>Nguyễn Xuân Thanh</div>
                         </div>
                     </div>
