@@ -459,10 +459,10 @@ const App = () => {
                                     color: '#475569'
                                 }}
                                 dangerouslySetInnerHTML={{ __html: `
-                                    <div style="margin-bottom: 5px">- Giá trị đã bao gồm VAT. Miễn phí vận chuyển cho đơn hàng từ 10 triệu đồng</div>
                                     <div style="margin-bottom: 5px">- Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng</div>
-                                    <div style="margin-bottom: 5px">- Thanh toán: Chuyển khoản 100% trước khi xuất hàng</div>
-                                    <div style="font-weight: bold; margin-top: 5px">Số tài khoản: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM</div>
+                                    <div style="margin-bottom: 5px">- Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng</div>
+                                    <div style="font-weight: bold; margin-top: 5px">Số tài khoản: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM - CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</div>
+                                    <div style="font-weight: bold; margin-top: 5px">862 999 888 - ACB - Nguyễn Xuân Thanh</div>
                                 `}}
                             />
                         </div>
