@@ -283,7 +283,7 @@ const App = () => {
                                         </td>
                                         <td align="right" style={{fontWeight: 'bold', color: '#1A365D'}}>{formatCurrency(amount)}</td>
                                         <td>
-                                            <input type="text" className="number-input" placeholder="..." value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} style={{textAlign: 'left'}} />
+                                            <input type="text" className="number-input" placeholder="" value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} style={{textAlign: 'left'}} />
                                         </td>
                                         <td className="no-print" align="center">
                                             <button className="remove-btn" onClick={() => removeItem(item.id)}><Trash2 size={12} /></button>
@@ -306,7 +306,7 @@ const App = () => {
                                         />
                                     </td>
                                     <td>
-                                        <input type="text" className="number-input" placeholder="..." value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} style={{textAlign: 'left'}} />
+                                        <input type="text" className="number-input" placeholder="" value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} style={{textAlign: 'left'}} />
                                     </td>
                                     <td className="no-print" align="center">
                                         <button className="remove-btn" onClick={() => setShipping({...shipping, visible: false, value: 0})} title="Xoá vận chuyển"><Trash2 size={12} /></button>
@@ -332,7 +332,7 @@ const App = () => {
                                         </div>
                                     </td>
                                     <td>
-                                        <input type="text" className="number-input" placeholder="..." value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} style={{textAlign: 'left'}} />
+                                        <input type="text" className="number-input" placeholder="" value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} style={{textAlign: 'left'}} />
                                     </td>
                                     <td className="no-print" align="center">
                                         <button className="remove-btn" onClick={() => setDiscount({...discount, visible: false, value: 0})} title="Xoá giảm giá"><Trash2 size={12} /></button>
