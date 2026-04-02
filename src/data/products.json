@@ -1,0 +1,129 @@
+{
+  "products": [
+    {
+      "id": 101,
+      "name": "Keo Trám Trét 1K (Wood Filler) - Trắng/Gỗ",
+      "p_prices": { "1": 100440, "5": 498960, "20": 2376000 }
+    },
+    {
+      "id": 102,
+      "name": "Matic Trong Suốt 1K (Matic Clear)",
+      "p_prices": { "1": 130680, "5": 594000, "20": 2019600 }
+    },
+    {
+      "id": 103,
+      "name": "Matic Trắng 1K (Wood Matic White)",
+      "p_prices": { "1": 130680, "5": 594000, "20": 2019600 }
+    },
+    {
+      "id": 104,
+      "name": "Lót Trong Suốt 1K (Sanding Sealer)",
+      "p_prices": { "1": 159840, "5": 712800, "20": 2700000 }
+    },
+    {
+      "id": 105,
+      "name": "Lót Chống Xì Dầu 1K (Anti Tannin)",
+      "p_prices": { "1": 178200, "5": 819720, "20": 3160080 }
+    },
+    {
+      "id": 106,
+      "name": "Lót Trắng 1K (White Wood Primer)",
+      "p_prices": { "1": 159840, "5": 712800, "20": 2692440 }
+    },
+    {
+      "id": 107,
+      "name": "Sơn Lau Gỗ 1K (Wood Stain)",
+      "p_prices": { "1": 205200, "5": 950400, "20": 3641760 }
+    },
+    {
+      "id": 109,
+      "name": "Màu Bệt Trong Nhà 1K (Wood Paint Interior)",
+      "p_prices": { "1": 253800, "5": 1215000, "20": 4644000 }
+    },
+    {
+      "id": 110,
+      "name": "Sơn 2in1 Trong Nhà 1K (Finish Interior)",
+      "p_prices": { "1": 248400, "5": 1188000, "20": 4536000 }
+    },
+    {
+      "id": 111,
+      "name": "Phủ Bóng Lacquer Trong Nhà 1K",
+      "p_prices": { "1": 205200, "5": 972000, "20": 3672000 }
+    },
+    {
+      "id": 112,
+      "name": "Phủ Bóng PUD Trong Nhà 1K",
+      "p_prices": { "1": 280800, "5": 1215000, "20": 5184000 }
+    },
+    {
+      "id": 113,
+      "name": "Màu Bệt Ngoài Trời 1K (Wood Paint Exterior)",
+      "p_prices": { "1": 318600, "5": 1539000, "20": 5940000 }
+    },
+    {
+      "id": 114,
+      "name": "Sơn 2in1 Ngoài Trời 1K (Finish Exterior)",
+      "p_prices": { "1": 313200, "5": 1512000, "20": 5832000 }
+    },
+    {
+      "id": 115,
+      "name": "Phủ Bóng Lacquer Ngoài Trời 1K",
+      "p_prices": { "1": 237600, "5": 1069200, "20": 4039200 }
+    },
+    {
+      "id": 116,
+      "name": "Phủ Bóng PUD Ngoài Trời 1K (Lotus PUD)",
+      "p_prices": { "1": 302400, "5": 1458000, "20": 5616000 }
+    },
+    {
+      "id": 117,
+      "name": "Lót Trong Suốt 2K (2K71 Nội Thất)",
+      "p_prices": { "1": 151200, "5": 702000, "20": 2764800 }
+    },
+    {
+      "id": 118,
+      "name": "Lót Trong Suốt 2K (2K71 Ngoại Thất)",
+      "p_prices": { "1": 181200, "5": 852000, "20": 3364800 }
+    },
+    {
+      "id": 119,
+      "name": "Lót Trắng 2K (MX83 Nội Thất)",
+      "p_prices": { "1": 183600, "5": 891000, "20": 3456000 }
+    },
+    {
+      "id": 121,
+      "name": "Phủ Bóng Lacquer 2K (2K71 Nội Thất)",
+      "p_prices": { "1": 172800, "5": 810000, "20": 3024000 }
+    },
+    {
+      "id": 133,
+      "name": "Phủ Bóng Lacquer 2K (2K33 Nội Thất)",
+      "p_prices": { "1": 205200, "5": 1004400, "20": 3693600 }
+    },
+    {
+      "id": 139,
+      "name": "Sơn Ngoại Thất & Sàn 2K (2K72)",
+      "p_prices": { "1": 199800, "5": 939600, "20": 3564000 }
+    },
+    {
+      "id": 141,
+      "name": "Lót Kim Loại Chống Gỉ (Metal Primer)",
+      "p_prices": { "1": 217080, "5": 986040, "20": 3723840 }
+    },
+    {
+      "id": 142,
+      "name": "Phủ Màu Kim Loại (Metal Coat Finish)",
+      "p_prices": { "1": 237600, "5": 1092960, "20": 4196880 }
+    },
+    {
+      "id": 143,
+      "name": "Sơn Kim Loại 2 in 1 (DTM Metal Coat)",
+      "p_prices": { "1": 254880, "5": 1188000, "20": 4639680 }
+    },
+    {
+      "id": 148,
+      "name": "Chất Đóng Rắn (Hardener)",
+      "p_prices": { "1": 799200, "0.5": 421200, "0.1": 91800 }
+    }
+  ]
+}
