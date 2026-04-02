@@ -258,7 +258,7 @@ const App = () => {
                                 return (
                                     <tr key={item.id}>
                                         <td align="center">{index + 1}</td>
-                                        <td style={{padding: '3px 15px', verticalAlign: 'top', borderRight: 'none'}}>
+                                        <td style={{padding: '3px 15px', verticalAlign: 'middle', borderRight: 'none'}}>
                                             <div style={{display: 'flex', flexDirection: 'column', gap: '1px'}}>
                                                 <input 
                                                     type="text"
