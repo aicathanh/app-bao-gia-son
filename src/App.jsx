@@ -289,15 +289,27 @@ const App = () => {
                                             </datalist>
                                         </td>
                                         <td style={{borderLeft: 'none'}}>
-                                            <select 
-                                                className="product-select"
-                                                value={item.size}
-                                                onChange={(e) => updateItem(item.id, 'size', e.target.value)}
-                                                style={{border: 'none', background: 'transparent'}}
-                                            >
-                                                {getAvailableSizes(item.productId).map(s => (<option key={s} value={s}>{s}</option>))}
-                                            </select>
+                                            {item.productId ? (
+                                                <select 
+                                                    className="product-select"
+                                                    value={item.size}
+                                                    onChange={(e) => updateItem(item.id, 'size', e.target.value)}
+                                                    style={{border: 'none', background: 'transparent'}}
+                                                >
+                                                    {getAvailableSizes(item.productId).map(s => (<option key={s} value={s}>{s}</option>))}
+                                                </select>
+                                            ) : (
+                                                <input 
+                                                    type="text" 
+                                                    className="number-input" 
+                                                    style={{border: 'none', background: '#fffbeb', textAlign: 'center'}} 
+                                                    placeholder="Size..."
+                                                    value={item.size} 
+                                                    onChange={(e) => updateItem(item.id, 'size', e.target.value)} 
+                                                />
+                                            )}
                                         </td>
+
                                         <td align="center">Thùng</td>
                                         <td align="right" style={{color: '#2d3748'}}>
                                             {item.productId ? (
