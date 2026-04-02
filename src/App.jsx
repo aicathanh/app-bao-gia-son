@@ -156,21 +156,21 @@ const App = () => {
         <div className="container">
             <div id="quotation-container" className="app-container">
                 {/* Header Section - Logo & Company Info */}
-                <div className="header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '5px'}}>
+                <div className="header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px'}}>
                     <div className="logo-container">
                         <img 
                             src={logoSrc} 
                             alt="Logo" 
                             style={{
-                                height: '70px', 
+                                height: '50px', 
                                 width: 'auto',
                                 objectFit: 'contain', 
-                                mixBlendMode: 'multiply' // Makes white background transparent
+                                mixBlendMode: 'multiply'
                             }} 
                         />
                     </div>
-                    <div className="company-info" style={{textAlign: 'right', fontSize: '10px'}}>
-                        <div className="company-name" style={{fontWeight: 'bold', color: '#2F855A', fontSize: '11px'}}>CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</div>
+                    <div className="company-info" style={{textAlign: 'right', fontSize: '9px', lineHeight: '1.2'}}>
+                        <div className="company-name" style={{fontWeight: 'bold', color: '#2F855A', fontSize: '10px', marginBottom: '1px'}}>CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</div>
                         <div>MST: 0313351528</div>
                         <div>Đ/c: 99/5 Đường XTT26-1, Ấp 2, Xã Bà Điểm, TP.HCM</div>
                         <div>Email: sales@sonlotus.vn | Hotline: 0943 966 662</div>
@@ -178,17 +178,19 @@ const App = () => {
                     </div>
                 </div>
 
-                <div className="quotation-title" style={{fontSize: '22px', fontWeight: '900', textAlign: 'center', margin: '15px 0', color: '#1A365D', letterSpacing: '1px'}}>
+                <div className="quotation-title" style={{fontSize: '18px', fontWeight: '900', textAlign: 'center', margin: '5px 0', color: '#1A365D', letterSpacing: '1px'}}>
                     BÁO GIÁ SƠN LOTUS
                 </div>
 
-                <div style={{textAlign: 'right', fontStyle: 'italic', marginBottom: '10px', color: '#4a5568'}}>
+                <div style={{textAlign: 'right', fontStyle: 'italic', marginBottom: '5px', color: '#4a5568', fontSize: '10px'}}>
                     TP. HCM, ngày {today}
                 </div>
 
+
                 {/* Customer Section - Sophisticated Layout */}
-                <div className="customer-section" style={{marginBottom: '15px', borderBottom: '1px solid #cbd5e0', paddingBottom: '8px'}}>
-                    <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                <div className="customer-section" style={{marginBottom: '10px', borderBottom: '1px solid #cbd5e0', paddingBottom: '5px', fontSize: '11px'}}>
+
+                        <div style={{display: 'flex', gap: '3px', flexDirection: 'column'}}>
                         <div style={{display: 'flex', gap: '8px', alignItems: 'flex-baseline'}}>
                             <span style={{fontWeight: '700', color: '#64748b', textTransform: 'uppercase', whiteSpace: 'nowrap'}}>Tên khách hàng:</span>
                             <input 
@@ -225,12 +227,13 @@ const App = () => {
                                 <input 
                                     type="text"
                                     value={customer.quoteId}
-                                    style={{border: 'none', background: 'transparent', fontWeight: 'bold', color: '#1A365D', width: '150px', padding: 0}}
+                                    style={{border: 'none', background: 'transparent', fontWeight: 'bold', color: '#1A365D', width: '150px', padding: 0, textAlign: 'right'}}
                                     onChange={(e) => setCustomer({...customer, quoteId: e.target.value})}
                                 />
                             </div>
                         </div>
                     </div>
+
                 </div>
 
                 {/* Table Section - Principal Area */}
@@ -445,19 +448,20 @@ const App = () => {
                 </div>
 
                 {/* Footer Notes - Formal Styling */}
-                <div className="footer-section" style={{marginTop: '20px'}}>
-                    <div style={{display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '40px'}}>
+                <div className="footer-section" style={{marginTop: '10px', fontSize: '10px'}}>
+                    <div style={{display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '20px'}}>
                         <div>
                             <p style={{fontWeight: 'bold', textDecoration: 'underline'}}>Ghi chú:</p>
                             <div 
                                 contentEditable 
                                 className="editable-notes"
                                 style={{
-                                    marginTop: '10px',
+                                    marginTop: '5px',
                                     outline: 'none',
-                                    lineHeight: '1.6',
+                                    lineHeight: '1.4',
                                     color: '#475569'
                                 }}
+
                                 dangerouslySetInnerHTML={{ __html: `
                                     <div style="margin-bottom: 5px">- Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng</div>
                                     <div style="margin-bottom: 5px">- Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng</div>
