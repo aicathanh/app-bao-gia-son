@@ -61,17 +61,22 @@ const App = () => {
         }
     };
 
-    const updateItem = (id, field, value) => {
-        setItems(items.map(item => {
+    const updateItem = (id, fieldOrFields, value) => {
+        setItems(prevItems => prevItems.map(item => {
             if (item.id === id) {
-                const updated = { ...item, [field]: value };
+                let updated = { ...item };
+                if (typeof fieldOrFields === 'object') {
+                    updated = { ...updated, ...fieldOrFields };
+                } else {
+                    updated = { ...updated, [fieldOrFields]: value };
+                }
                 
-                // If product changes, set default size to the first available size in prices
-                if (field === 'productId' && value) {
-                    const product = products.find(p => p.id === parseInt(value));
+                // If product changes, set default size
+                if ((fieldOrFields === 'productId' || fieldOrFields.productId) && updated.productId) {
+                    const product = products.find(p => p.id === parseInt(updated.productId));
                     if (product) {
                         const sizes = Object.keys(product.p_prices);
-                        if (sizes.length > 0) {
+                        if (sizes.length > 0 && !sizes.includes(updated.size)) {
                             updated.size = sizes[0];
                         }
                     }
@@ -81,6 +86,7 @@ const App = () => {
             return item;
         }));
     };
+
 
     const getPrice = (item) => {
         if (item.productId) {
@@ -264,13 +270,12 @@ const App = () => {
                                                         const val = e.target.value;
                                                         const selected = products.find(p => p.name === val);
                                                         if (selected) {
-                                                            updateItem(item.id, 'productId', selected.id);
-                                                            updateItem(item.id, 'customName', '');
+                                                            updateItem(item.id, { productId: selected.id, customName: '' });
                                                         } else {
-                                                            updateItem(item.id, 'productId', '');
-                                                            updateItem(item.id, 'customName', val);
+                                                            updateItem(item.id, { productId: '', customName: val });
                                                         }
                                                     }}
+
 
                                                     style={{width: '100%', border: 'none', borderBottom: '1px dashed #cbd5e0', padding: '0', height: '18px'}}
                                                 />
