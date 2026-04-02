@@ -14,7 +14,22 @@ export const exportToPDF = async (elementId, filename = 'Bao_Gia.pdf') => {
       scale: 2, // higher quality
       useCORS: true,
       logging: false,
+      onclone: (clonedDoc) => {
+        // Find and hide all elements with the 'no-print' class in the cloned document
+        const noPrintItems = clonedDoc.querySelectorAll('.no-print');
+        noPrintItems.forEach(item => {
+          item.style.display = 'none';
+        });
+        
+        // Also ensure inputs look clean
+        const inputs = clonedDoc.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+          input.style.border = 'none';
+          input.style.background = 'transparent';
+        });
+      }
     });
+
     
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
