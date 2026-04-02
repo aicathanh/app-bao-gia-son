@@ -362,19 +362,12 @@ input[type=number] {
 }
 
 @media print {
-  @page {
-      size: landscape;
-      margin: 10mm;
-  }
   .app-container {
       box-shadow: none;
       padding: 0;
       border: none;
-      width: 100% !important;
-      max-width: 100% !important;
   }
-  .action-buttons, .no-print, .remove-btn {
+  .action-buttons, .no-print {
       display: none !important;
   }
 }
-

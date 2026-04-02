@@ -31,6 +31,7 @@ export const exportToPDF = async (elementId, filename = 'Bao_Gia.pdf') => {
     });
 
     
+    const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
