@@ -291,7 +291,7 @@ const App = () => {
                                                 {products.map(p => (<option key={p.id} value={p.name} />))}
                                             </datalist>
                                         </td>
-                                        <td>
+                                        <td align="center">
                                             {item.productId ? (
                                                 <select 
                                                     className="product-select"

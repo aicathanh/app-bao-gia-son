@@ -185,6 +185,8 @@ tr:nth-child(even) {
   border: 1px solid transparent;
   background: transparent;
   outline: none;
+  text-align: center;
+  text-align-last: center;
 }
 
 .product-select:focus {
