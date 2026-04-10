@@ -171,7 +171,11 @@ const DesktopApp = () => {
                                         </td>
                                         <td align="center">
                                             <div className="clean-input center">
-                                                {item.productId ? selectedProduct.p_prices[item.size] && item.size : (
+                                                {item.productId ? (
+                                                    <select className="clean-input center" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} style={{ textAlignLast: 'center' }}>
+                                                        {Object.keys(selectedProduct.p_prices).map(s => <option key={s} value={s}>{s}</option>)}
+                                                    </select>
+                                                ) : (
                                                     <input className="clean-input center" type="text" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />
                                                 )}
                                             </div>

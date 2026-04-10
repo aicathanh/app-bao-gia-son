@@ -165,15 +165,15 @@ input[type=number] {
   align-items: center;
   gap: 20px;
   border-top: 3px solid var(--primary);
-  padding: 15px 0;
-  margin-top: 10px;
+  padding: 5px 0;
+  margin-top: 5px;
 }
 
 .total-label { font-weight: 900; color: var(--primary); font-size: 16px; }
 .total-value { font-weight: 900; color: var(--danger); font-size: 22px; }
 
 /* Footer */
-.footer-section { display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; margin-top: 5px; }
+.footer-section { display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; margin-top: 2px; }
 .notes-container { font-size: 12px; color: #4a5568; }
 .notes-title { font-weight: 800; text-decoration: underline; margin-bottom: 5px; }
 .editable-notes { line-height: 1.4; outline: none; }
