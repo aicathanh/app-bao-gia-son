@@ -181,15 +181,12 @@ const DesktopApp = () => {
                                         <td align="center">Thùng</td>
                                         <td align="right">
                                             {item.productId ? formatCurrency(price) : (
-                                                <div style={{ position: 'relative' }}>
-                                                    <input 
-                                                        className="clean-input right" 
-                                                        type="number" 
-                                                        value={item.customPrice || ''} 
-                                                        onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value) || 0)} 
-                                                    />
-                                                    {item.customPrice > 0 && <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--primary)', position: 'absolute', right: '-15px', top: '2px' }}>₫</span>}
-                                                </div>
+                                                <input 
+                                                    className="clean-input right" 
+                                                    type="text" 
+                                                    value={item.customPrice ? formatCurrency(item.customPrice).replace('₫', '').trim() : ''} 
+                                                    onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/\./g, '')) || 0)} 
+                                                />
                                             )}
                                         </td>
                                         <td align="center">
@@ -197,7 +194,7 @@ const DesktopApp = () => {
                                         </td>
                                         <td align="right" className="amount">{formatCurrency(price * item.quantity)}</td>
                                         <td>
-                                            <input type="text" className="note-input" value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} placeholder="..." />
+                                            <input type="text" className="note-input" value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} placeholder="" />
                                         </td>
                                         <td className="no-print" align="center">
                                             <button className="del-btn" onClick={() => removeItem(item.id)}><Trash2 size={12} /></button>
@@ -210,12 +207,16 @@ const DesktopApp = () => {
                                 <tr className="cost-row">
                                     <td colSpan="2" className="label-cell">CHI PHÍ VẬN CHUYỂN</td>
                                     <td colSpan="4"></td>
-                                    <td align="right" style={{ position: 'relative' }}>
-                                        <input className="clean-input right" type="number" value={shipping.value || ''} onChange={(e) => setShipping({...shipping, value: parseInt(e.target.value) || 0})} />
-                                        {shipping.value > 0 && <span style={{ fontSize: '13px', fontWeight: 'bold', position: 'absolute', right: '5px', top: '8px' }}>₫</span>}
+                                    <td align="right">
+                                        <input 
+                                            className="clean-input right" 
+                                            type="text" 
+                                            value={shipping.value ? formatCurrency(shipping.value).replace('₫', '').trim() : ''} 
+                                            onChange={(e) => setShipping({...shipping, value: parseInt(e.target.value.replace(/\./g, '')) || 0})} 
+                                        />
                                     </td>
                                     <td>
-                                        <input type="text" className="note-input" value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} placeholder="..." />
+                                        <input type="text" className="note-input clean-input" value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} placeholder="" style={{ fontWeight: 'normal', color: '#4a5568' }} />
                                     </td>
                                     <td colSpan="1" className="no-print"><button onClick={() => setShipping({...shipping, visible: false, value: 0})}>x</button></td>
                                 </tr>
@@ -224,13 +225,16 @@ const DesktopApp = () => {
                                 <tr className="cost-row discount">
                                     <td colSpan="2" className="label-cell">GIẢM GIÁ</td>
                                     <td colSpan="4"></td>
-                                    <td align="right" style={{ position: 'relative' }}>
-                                        <span style={{ position: 'absolute', left: '5px', top: '8px' }}>-</span>
-                                        <input className="clean-input right" type="number" value={discount.value || ''} onChange={(e) => setDiscount({...discount, value: parseInt(e.target.value) || 0})} />
-                                        {discount.value > 0 && <span style={{ fontSize: '13px', fontWeight: 'bold', position: 'absolute', right: '5px', top: '8px' }}>₫</span>}
+                                    <td align="right">
+                                        <input 
+                                            className="clean-input right" 
+                                            type="text" 
+                                            value={discount.value ? '-' + formatCurrency(discount.value).replace('₫', '').trim() : ''} 
+                                            onChange={(e) => setDiscount({...discount, value: parseInt(e.target.value.replace(/[\.\-]/g, '')) || 0})} 
+                                        />
                                     </td>
                                     <td>
-                                        <input type="text" className="note-input" value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} placeholder="..." />
+                                        <input type="text" className="note-input clean-input" value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} placeholder="" style={{ fontWeight: 'normal', color: '#4a5568' }} />
                                     </td>
                                     <td colSpan="1" className="no-print"><button onClick={() => setDiscount({...discount, visible: false, value: 0})}>x</button></td>
                                 </tr>
