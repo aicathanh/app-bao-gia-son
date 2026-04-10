@@ -218,7 +218,7 @@ const MobileApp = () => {
                     borderTop: '1px dashed #cbd5e0', 
                     marginTop: '20px',
                     color: '#64748b',
-                    fontSize: '13px',
+                    fontSize: '11px',
                     fontWeight: 'bold'
                 }}>
                     Hotline: 0943 966 662 | www.sonlotus.vn
