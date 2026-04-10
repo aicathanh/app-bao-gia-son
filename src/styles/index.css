@@ -112,6 +112,30 @@ body {
 .col-note { width: 150px; }
 .col-action { width: 40px; }
 
+.clean-input {
+  width: 100%;
+  border: none !important;
+  background: transparent !important;
+  outline: none !important;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--primary);
+  padding: 4px;
+}
+.clean-input.center { text-align: center; }
+.clean-input.right { text-align: right; padding-right: 15px; }
+
+/* Remove arrow from number input */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 .product-cell { 
   text-align: left !important; 
   padding-left: 8px !important;
