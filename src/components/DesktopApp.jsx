@@ -261,7 +261,7 @@ const DesktopApp = () => {
 
                 <div className="footer-section">
                     <div className="notes-container">
-                        <div className="notes-title">Ghi chú (Anh/Chị có thể bôi đen chữ để chỉnh Đậm/Nghiêng):</div>
+                        <div className="notes-title">Ghi chú:</div>
                         <div className="editable-notes" 
                             style={{ border: '1px dashed #e2e8f0', padding: '10px', borderRadius: '4px', minHeight: '60px' }}
                             contentEditable 
