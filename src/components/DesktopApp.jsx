@@ -93,9 +93,10 @@ const DesktopApp = () => {
                         <img src={logoSrc} alt="Logo" style={{ height: '60px', mixBlendMode: 'multiply' }} />
                     </div>
                     <div className="company-info">
-                        <div className="company-name">CÔNG TY TNHH BÍCH TRANG</div>
+                        <div className="company-name">CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</div>
                         <div className="info-line">MST: 0313351528</div>
-                        <div className="info-line">Hotline: 0943 966 662</div>
+                        <div className="info-line">Đ/c: 99/5 Đường XTT26-1, Ấp 2, Xã Bà Điểm, TP.HCM</div>
+                        <div className="info-line">Email: sales@sonlotus.vn | Hotline: 0943 966 662</div>
                         <div className="info-line">www.sonlotus.vn</div>
                     </div>
                 </div>
@@ -131,13 +132,13 @@ const DesktopApp = () => {
                         <thead>
                             <tr>
                                 <th className="col-stt">STT</th>
-                                <th className="col-name">Sản phẩm</th>
-                                <th className="col-size">Size</th>
+                                <th className="col-name">TÊN SẢN PHẨM</th>
+                                <th className="col-size">K.L/THÙNG (KG)</th>
                                 <th className="col-unit">ĐVT</th>
-                                <th className="col-price">Đơn giá</th>
+                                <th className="col-price">ĐƠN GIÁ</th>
                                 <th className="col-qty">SL</th>
-                                <th className="col-amount">Thành tiền</th>
-                                <th className="col-note">Ghi chú</th>
+                                <th className="col-amount">THÀNH TIỀN</th>
+                                <th className="col-note">GHI CHÚ</th>
                                 <th className="col-action no-print"></th>
                             </tr>
                         </thead>
@@ -230,8 +231,10 @@ const DesktopApp = () => {
                     <div className="notes-container">
                         <div className="notes-title">Ghi chú:</div>
                         <div className="editable-notes" contentEditable dangerouslySetInnerHTML={{ __html: `
-                            - Giao hàng 2-3 ngày. Đặt cọc 50%.<br/>
-                            <b>STK: 211014851223910 - Eximbank HCM - CÔNG TY TNHH BÍCH TRANG</b>
+                            - Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng<br/>
+                            - Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng<br/>
+                            <b>STK: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM - CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</b><br/>
+                            <b>STK: 862 999 888 - ACB - Nguyễn Xuân Thanh</b>
                         `}} />
                     </div>
                     <div className="signature-area">

@@ -94,10 +94,11 @@ body {
 }
 
 .quotation-table th {
-  background: var(--primary);
-  color: white;
+  background: white;
+  color: var(--primary);
   text-transform: uppercase;
   font-size: 11px;
+  font-weight: 800;
 }
 
 /* Explicit pixel widths for ALL columns */
