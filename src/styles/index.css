@@ -117,8 +117,8 @@ body {
   border: none !important;
   background: transparent !important;
   outline: none !important;
-  font-family: inherit;
-  font-size: inherit;
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 14px;
   font-weight: 700;
   color: var(--primary);
   padding: 4px;

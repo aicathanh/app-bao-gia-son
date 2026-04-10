@@ -180,14 +180,17 @@ const DesktopApp = () => {
                                         </td>
                                         <td align="center">Thùng</td>
                                         <td align="right">
-                                            {item.productId ? formatCurrency(price) : (
-                                                <input 
-                                                    className="clean-input right" 
-                                                    type="text" 
-                                                    value={item.customPrice ? formatCurrency(item.customPrice).replace('₫', '').trim() : ''} 
-                                                    onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/\./g, '')) || 0)} 
-                                                />
-                                            )}
+                                            <div className="clean-input right">
+                                                {item.productId ? formatCurrency(price) : (
+                                                    <input 
+                                                        className="clean-input right" 
+                                                        type="text" 
+                                                        value={item.customPrice ? formatCurrency(item.customPrice).trim() : ''} 
+                                                        onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)} 
+                                                        style={{ padding: 0 }}
+                                                    />
+                                                )}
+                                            </div>
                                         </td>
                                         <td align="center">
                                             <input className="clean-input center" type="number" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)} />
