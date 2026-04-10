@@ -170,13 +170,11 @@ const DesktopApp = () => {
                                             <div className="display-name">{productName || "Chọn..."}</div>
                                         </td>
                                         <td align="center">
-                                            {item.productId ? (
-                                                <select className="clean-input" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)}>
-                                                    {Object.keys(selectedProduct.p_prices).map(s => <option key={s} value={s}>{s}</option>)}
-                                                </select>
-                                            ) : (
-                                                <input className="clean-input center" type="text" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />
-                                            )}
+                                            <div className="clean-input center">
+                                                {item.productId ? selectedProduct.p_prices[item.size] && item.size : (
+                                                    <input className="clean-input center" type="text" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />
+                                                )}
+                                            </div>
                                         </td>
                                         <td align="center">Thùng</td>
                                         <td align="right">
@@ -210,15 +208,18 @@ const DesktopApp = () => {
                                 <tr className="cost-row">
                                     <td colSpan="2" className="label-cell">CHI PHÍ VẬN CHUYỂN</td>
                                     <td colSpan="4"></td>
-                                    <td align="right">
-                                        <input 
-                                            className="clean-input right" 
-                                            type="text" 
-                                            value={shipping.value ? formatCurrency(shipping.value).replace('₫', '').trim() : ''} 
-                                            onChange={(e) => setShipping({...shipping, value: parseInt(e.target.value.replace(/\./g, '')) || 0})} 
-                                        />
+                                    <td align="right" style={{ position: 'relative' }}>
+                                        <div className="clean-input right">
+                                            <input 
+                                                className="clean-input right" 
+                                                type="text" 
+                                                value={shipping.value ? formatCurrency(shipping.value).trim() : ''} 
+                                                onChange={(e) => setShipping({...shipping, value: parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0})} 
+                                                style={{ paddingRight: '0' }}
+                                            />
+                                        </div>
                                     </td>
-                                    <td>
+                                    <td style={{ borderRight: '1px solid #e2e8f0' }}>
                                         <input type="text" className="note-input clean-input" value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} placeholder="" style={{ fontWeight: 'normal', color: '#4a5568' }} />
                                     </td>
                                     <td colSpan="1" className="no-print"><button onClick={() => setShipping({...shipping, visible: false, value: 0})}>x</button></td>
@@ -229,14 +230,17 @@ const DesktopApp = () => {
                                     <td colSpan="2" className="label-cell">GIẢM GIÁ</td>
                                     <td colSpan="4"></td>
                                     <td align="right">
-                                        <input 
-                                            className="clean-input right" 
-                                            type="text" 
-                                            value={discount.value ? '-' + formatCurrency(discount.value).replace('₫', '').trim() : ''} 
-                                            onChange={(e) => setDiscount({...discount, value: parseInt(e.target.value.replace(/[\.\-]/g, '')) || 0})} 
-                                        />
+                                        <div className="clean-input right">
+                                            <input 
+                                                className="clean-input right" 
+                                                type="text" 
+                                                value={discount.value ? '-' + formatCurrency(discount.value).trim() : ''} 
+                                                onChange={(e) => setDiscount({...discount, value: parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0})} 
+                                                style={{ paddingRight: '0' }}
+                                            />
+                                        </div>
                                     </td>
-                                    <td>
+                                    <td style={{ borderRight: '1px solid #e2e8f0' }}>
                                         <input type="text" className="note-input clean-input" value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} placeholder="" style={{ fontWeight: 'normal', color: '#4a5568' }} />
                                     </td>
                                     <td colSpan="1" className="no-print"><button onClick={() => setDiscount({...discount, visible: false, value: 0})}>x</button></td>
@@ -257,8 +261,11 @@ const DesktopApp = () => {
 
                 <div className="footer-section">
                     <div className="notes-container">
-                        <div className="notes-title">Ghi chú:</div>
-                        <div className="editable-notes" contentEditable dangerouslySetInnerHTML={{ __html: `
+                        <div className="notes-title">Ghi chú (Anh/Chị có thể bôi đen chữ để chỉnh Đậm/Nghiêng):</div>
+                        <div className="editable-notes" 
+                            style={{ border: '1px dashed #e2e8f0', padding: '10px', borderRadius: '4px', minHeight: '60px' }}
+                            contentEditable 
+                            dangerouslySetInnerHTML={{ __html: `
                             - Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng<br/>
                             - Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng<br/>
                             <b>STK: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM - CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</b><br/>
