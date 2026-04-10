@@ -75,8 +75,11 @@ const MobileApp = () => {
                     clonedNoExports.forEach(el => el.style.display = 'none');
                     
                     const container = clonedDoc.getElementById('mobile-container');
+                    container.style.width = '420px';
+                    container.style.padding = '25px';
                     container.style.paddingTop = '20px';
-                    container.style.paddingBottom = '20px';
+                    container.style.paddingBottom = '30px';
+                    container.style.backgroundColor = '#ffffff';
                 }
             });
 
@@ -184,18 +187,21 @@ const MobileApp = () => {
                                 <div className="m-price-grid" style={{ 
                                     display: 'grid', 
                                     gridTemplateColumns: 'repeat(3, 1fr)', 
-                                    gap: items.length > 4 ? '6px' : '10px' 
+                                    gap: '8px' 
                                 }}>
                                     {Object.entries(selectedProduct.p_prices).map(([size, price]) => (
                                         <div key={size} style={{ 
                                             background: '#f8fafc', 
-                                            padding: items.length > 4 ? '6px 2px' : '10px 5px', 
+                                            padding: '8px 4px', 
                                             borderRadius: '8px', 
                                             textAlign: 'center',
-                                            border: '1px solid #e2e8f0'
+                                            border: '1px solid #e2e8f0',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            justifyContent: 'center'
                                         }}>
-                                            <div style={{ fontSize: scale.size, color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>{size}Kg</div>
-                                            <div style={{ fontSize: scale.price, fontWeight: '900', color: '#2563eb' }}>{formatCurrency(price).replace('₫', '')}</div>
+                                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>{size}Kg</div>
+                                            <div style={{ fontSize: '13px', fontWeight: '900', color: '#2563eb', whiteSpace: 'nowrap' }}>{formatCurrency(price).replace('₫', '').trim()}</div>
                                         </div>
                                     ))}
                                 </div>
