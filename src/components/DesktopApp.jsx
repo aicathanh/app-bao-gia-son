@@ -1,0 +1,258 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, Download, Printer, Save, Search, X } from 'lucide-react';
+import { format } from 'date-fns';
+import productData from '../data/products.json';
+import { exportToPDF } from '../utils/pdfGenerator';
+import '../styles/index.css';
+import confetti from 'canvas-confetti';
+import logoSrc from '../assets/logo.png';
+import { Link } from 'react-router-dom';
+
+const DesktopApp = () => {
+    const defaultItem = { productId: '', size: '5', quantity: 1, note: '', customName: '', customPrice: 0 };
+    const products = productData.products;
+
+    const [customer, setCustomer] = useState({
+        name: '',
+        quoteId: '',
+        address: '',
+        phone: ''
+    });
+
+    const [shipping, setShipping] = useState({ value: 0, note: '', visible: true });
+    const [discount, setDiscount] = useState({ value: 0, note: '', visible: true });
+    const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
+    const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
+
+    const generateQuoteId = (name) => {
+        const getAbbreviation = (n) => {
+            if (!n) return 'XYZ';
+            const cleanName = n.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
+            return cleanName.trim().split(/\s+/).map(word => word[0]).join('').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        };
+        const now = new Date();
+        return `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}/BBG/${getAbbreviation(name)}-BT`;
+    };
+
+    useEffect(() => {
+        if (!customer.quoteId) {
+            setCustomer(prev => ({ ...prev, quoteId: generateQuoteId(prev.name) }));
+        }
+    }, [customer.name]);
+
+    const addItem = () => setItems([...items, { ...defaultItem, id: Date.now() }]);
+    const removeItem = (id) => items.length > 1 && setItems(items.filter(item => item.id !== id));
+    
+    const updateItem = (id, fieldOrFields, value) => {
+        setItems(prevItems => prevItems.map(item => {
+            if (item.id === id) {
+                let updated = { ...item };
+                if (typeof fieldOrFields === 'object') updated = { ...updated, ...fieldOrFields };
+                else updated = { ...updated, [fieldOrFields]: value };
+                
+                if ((fieldOrFields === 'productId' || fieldOrFields.productId) && updated.productId) {
+                    const product = products.find(p => p.id === parseInt(updated.productId));
+                    if (product) {
+                        const sizes = Object.keys(product.p_prices);
+                        if (sizes.length > 0 && !sizes.includes(updated.size)) updated.size = sizes[0];
+                    }
+                }
+                return updated;
+            }
+            return item;
+        }));
+    };
+
+    const getPrice = (item) => {
+        if (item.productId) {
+            const product = products.find(p => p.id === parseInt(item.productId));
+            return product ? product.p_prices[item.size] || 0 : 0;
+        }
+        return item.customPrice || 0;
+    };
+
+    const subtotal = items.reduce((sum, item) => sum + (getPrice(item) * item.quantity), 0);
+    const grandTotal = subtotal + (shipping.visible ? shipping.value : 0) - (discount.visible ? discount.value : 0);
+    const formatCurrency = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+
+    const handleDownload = async () => {
+        const btn = document.getElementById('dl-btn');
+        const text = btn.innerHTML;
+        btn.innerHTML = 'Exporting...';
+        await exportToPDF('quotation-container', `BaoGia_${customer.name || 'KhachHang'}.pdf`);
+        btn.innerHTML = text;
+        confetti();
+    };
+
+    return (
+        <div className="container">
+            <div id="quotation-container" className="app-container">
+                {/* Header Section */}
+                <div className="header">
+                    <div className="logo-container">
+                        <img src={logoSrc} alt="Logo" style={{ height: '60px', mixBlendMode: 'multiply' }} />
+                    </div>
+                    <div className="company-info">
+                        <div className="company-name">CÔNG TY TNHH BÍCH TRANG</div>
+                        <div className="info-line">MST: 0313351528</div>
+                        <div className="info-line">Hotline: 0943 966 662</div>
+                        <div className="info-line">www.sonlotus.vn</div>
+                    </div>
+                </div>
+
+                <div className="quotation-title">
+                    BÁO GIÁ SƠN LOTUS
+                    <div style={{ marginTop: '5px' }}>
+                        <Link to="/mobile" style={{ fontSize: '12px', color: '#2F855A', textDecoration: 'none', border: '1px solid #2F855A', padding: '2px 8px', borderRadius: '10px' }}>CHUYỂN SANG BẢN MOBILE 📱</Link>
+                    </div>
+                </div>
+                <div className="date-line">TP. HCM, ngày {today}</div>
+
+                {/* Customer Section */}
+                <div className="customer-section">
+                    <div className="field-row">
+                        <span className="label">TÊN KHÁCH HÀNG:</span>
+                        <input type="text" value={customer.name} onChange={(e) => setCustomer({...customer, name: e.target.value})} placeholder="........................................" />
+                    </div>
+                    <div className="field-row">
+                        <span className="label">ĐỊA CHỈ GIAO HÀNG:</span>
+                        <input type="text" value={customer.address} onChange={(e) => setCustomer({...customer, address: e.target.value})} placeholder="............................................................" />
+                    </div>
+                    <div className="split-row">
+                        <div className="field-row">
+                            <span className="label">SĐT:</span>
+                            <input type="text" value={customer.phone} onChange={(e) => setCustomer({...customer, phone: e.target.value})} placeholder="................" />
+                        </div>
+                        <div className="field-row right">
+                            <span className="label">SỐ BÁO GIÁ:</span>
+                            <input type="text" value={customer.quoteId} onChange={(e) => setCustomer({...customer, quoteId: e.target.value})} placeholder="................" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Table Section */}
+                <div className="table-responsive">
+                    <table className="quotation-table">
+                        <thead>
+                            <tr>
+                                <th className="col-stt">STT</th>
+                                <th className="col-name">Sản phẩm</th>
+                                <th className="col-size">Size</th>
+                                <th className="col-unit">ĐVT</th>
+                                <th className="col-price">Đơn giá</th>
+                                <th className="col-qty">SL</th>
+                                <th className="col-amount">Thành tiền</th>
+                                <th className="col-note">Ghi chú</th>
+                                <th className="col-action no-print"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items.map((item, index) => {
+                                const price = getPrice(item);
+                                const selectedProduct = products.find(p => p.id === parseInt(item.productId));
+                                const productName = selectedProduct ? selectedProduct.name : item.customName;
+                                return (
+                                    <tr key={item.id}>
+                                        <td align="center">{index + 1}</td>
+                                        <td className="product-cell">
+                                            <input 
+                                                type="text" 
+                                                className="search-input no-print" 
+                                                placeholder="Tìm sản phẩm..." 
+                                                list={`p-${item.id}`} 
+                                                value={productName}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    const p = products.find(x => x.name === val);
+                                                    if (p) updateItem(item.id, { productId: p.id, customName: '' });
+                                                    else updateItem(item.id, { productId: '', customName: val });
+                                                }}
+                                            />
+                                            <datalist id={`p-${item.id}`}>
+                                                {products.map(p => <option key={p.id} value={p.name} />)}
+                                            </datalist>
+                                            <div className="display-name">{productName || "Chọn..."}</div>
+                                        </td>
+                                        <td align="center">
+                                            {item.productId ? (
+                                                <select value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)}>
+                                                    {Object.keys(selectedProduct.p_prices).map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                            ) : (
+                                                <input type="text" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} style={{width: '40px'}} />
+                                            )}
+                                        </td>
+                                        <td align="center">Thùng</td>
+                                        <td align="right">
+                                            {item.productId ? formatCurrency(price) : (
+                                                <input type="text" value={item.customPrice || ''} onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value) || 0)} style={{width: '70px', textAlign: 'right'}} />
+                                            )}
+                                        </td>
+                                        <td align="center">
+                                            <input type="number" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)} style={{width: '35px', textAlign: 'center'}} />
+                                        </td>
+                                        <td align="right" className="amount">{formatCurrency(price * item.quantity)}</td>
+                                        <td>
+                                            <input type="text" className="note-input" value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} placeholder="..." />
+                                        </td>
+                                        <td className="no-print" align="center">
+                                            <button className="del-btn" onClick={() => removeItem(item.id)}><Trash2 size={12} /></button>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                            {/* Costs */}
+                            {shipping.visible && (
+                                <tr className="cost-row">
+                                    <td colSpan="2" className="label-cell">CHI PHÍ VẬN CHUYỂN</td>
+                                    <td colSpan="4"></td>
+                                    <td align="right"><input type="text" value={shipping.value || ''} onChange={(e) => setShipping({...shipping, value: parseInt(e.target.value) || 0})} /></td>
+                                    <td colSpan="2" className="no-print"><button onClick={() => setShipping({...shipping, visible: false, value: 0})}>x</button></td>
+                                </tr>
+                            )}
+                            {discount.visible && (
+                                <tr className="cost-row discount">
+                                    <td colSpan="2" className="label-cell">GIẢM GIÁ</td>
+                                    <td colSpan="4"></td>
+                                    <td align="right"><span>-</span><input type="text" value={discount.value || ''} onChange={(e) => setDiscount({...discount, value: parseInt(e.target.value) || 0})} /></td>
+                                    <td colSpan="2" className="no-print"><button onClick={() => setDiscount({...discount, visible: false, value: 0})}>x</button></td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                    <div className="btn-group no-print">
+                        <button className="btn-add" onClick={addItem}><Plus size={14} /> Thêm sản phẩm</button>
+                    </div>
+                </div>
+
+                {/* Total */}
+                <div className="total-section">
+                    <span className="total-label">TỔNG THÀNH TIỀN:</span>
+                    <span className="total-value">{formatCurrency(grandTotal)}</span>
+                </div>
+
+                <div className="footer-section">
+                    <div className="notes-container">
+                        <div className="notes-title">Ghi chú:</div>
+                        <div className="editable-notes" contentEditable dangerouslySetInnerHTML={{ __html: `
+                            - Giao hàng 2-3 ngày. Đặt cọc 50%.<br/>
+                            <b>STK: 211014851223910 - Eximbank HCM - CÔNG TY TNHH BÍCH TRANG</b>
+                        `}} />
+                    </div>
+                    <div className="signature-area">
+                        <div className="sig-title">Đại Diện Kinh Doanh</div>
+                        <div className="sig-name">NGUYỄN XUÂN THANH</div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="floating-actions no-print">
+                <button id="dl-btn" className="fab fab-blue" onClick={handleDownload}><Download size={24} /> <span>PDF</span></button>
+                <button className="fab fab-red" onClick={() => window.print()}><Printer size={24} /> <span>In</span></button>
+                <button className="fab fab-green" onClick={() => confetti()}><Save size={24} /> <span>Lưu</span></button>
+            </div>
+        </div>
+    );
+};
+
+export default DesktopApp;
