@@ -212,23 +212,16 @@ const MobileApp = () => {
                 {/* Footer only for Export Image */}
                 <div id="export-only-footer" style={{ 
                     display: 'none', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'flex-end',
+                    justifyContent: 'center', 
+                    alignItems: 'center',
                     padding: '15px', 
                     borderTop: '1px dashed #cbd5e0', 
-                    marginTop: '10px' 
+                    marginTop: '20px',
+                    color: '#64748b',
+                    fontSize: '13px',
+                    fontWeight: 'bold'
                 }}>
-                    <div style={{ textAlign: 'left' }}>
-                        <div style={{ fontWeight: '900', color: '#2563eb', fontSize: '14px' }}>CÔNG TY TNHH BÍCH TRANG</div>
-                        <div style={{ fontSize: '10px', color: '#64748b' }}>Trụ sở: 151 Võ Văn Bích, Củ Chi, TP. HCM</div>
-                        <div style={{ fontSize: '10px', color: '#64748b' }}>Website: www.sonlotus.vn</div>
-                    </div>
-                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <div style={{ width: '60px', height: '60px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '4px', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', marginBottom: '5px' }}>
-                           <QrCode size={40} color="#1e293b" />
-                        </div>
-                        <div style={{ fontWeight: '900', color: '#1e293b', fontSize: '13px' }}>Hotline: 0943 966 662</div>
-                    </div>
+                    Hotline: 0943 966 662 | www.sonlotus.vn
                 </div>
             </motion.div>
 
