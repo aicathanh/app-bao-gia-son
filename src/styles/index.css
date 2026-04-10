@@ -199,35 +199,6 @@ body {
   gap: 5px;
 }
 
-/* MOBILE FIXES */
-@media (max-width: 768px) {
-  body { font-size: 18px; } /* Even larger font */
-  .app-container { padding: 10px; box-shadow: none; border-radius: 0; }
-  .company-info { text-align: center; }
-  .split-row { display: flex; flex-direction: column; gap: 10px; }
-  .field-row.right { justify-content: flex-start; }
-  
-  .quotation-table td { font-size: 17px; padding: 12px 8px; }
-  .quotation-table th { font-size: 14px; }
-  
-  /* Force columns to hold width on mobile */
-  .col-name { width: 380px !important; }
-  .display-name { font-size: 20px !important; }
-  .col-qty { width: 80px !important; }
-  .col-price { width: 140px !important; }
-  .col-amount { width: 150px !important; }
-  
-  .footer-section { grid-template-columns: 1fr; gap: 20px; }
-  .floating-actions { bottom: 15px; right: 15px; gap: 10px; }
-  .fab { width: 50px; height: 50px; }
-
-  /* Ensure the table is scrollable but readable */
-  .table-responsive {
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: white;
-  }
-}
 
 @media print {
   .no-print { display: none !important; }

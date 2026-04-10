@@ -100,12 +100,7 @@ const DesktopApp = () => {
                     </div>
                 </div>
 
-                <div className="quotation-title">
-                    BÁO GIÁ SƠN LOTUS
-                    <div style={{ marginTop: '5px' }}>
-                        <Link to="/mobile" style={{ fontSize: '12px', color: '#2F855A', textDecoration: 'none', border: '1px solid #2F855A', padding: '2px 8px', borderRadius: '10px' }}>CHUYỂN SANG BẢN MOBILE 📱</Link>
-                    </div>
-                </div>
+                <div className="quotation-title">BÁO GIÁ SƠN LOTUS</div>
                 <div className="date-line">TP. HCM, ngày {today}</div>
 
                 {/* Customer Section */}
