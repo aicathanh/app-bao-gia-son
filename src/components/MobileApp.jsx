@@ -84,9 +84,11 @@ const MobileApp = () => {
 
     const handleSearch = (itemId, query) => {
         setSearchQuery({ ...searchQuery, [itemId]: query });
-        if (!query) {
-             updateItem(itemId, { productId: '', customName: '' });
-        }
+    };
+
+    const clearSelection = (itemId) => {
+        updateItem(itemId, { productId: '', customName: '' });
+        setSearchQuery({ ...searchQuery, [itemId]: '' });
     };
 
     const selectProduct = (itemId, product) => {
@@ -168,13 +170,17 @@ const MobileApp = () => {
                                     type="text" 
                                     placeholder="Tìm hoặc nhập tên..." 
                                     value={query || productName}
-                                    onChange={(e) => handleSearch(item.id, e.target.value)}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        handleSearch(item.id, val);
+                                        if (!val) clearSelection(item.id);
+                                    }}
                                     onBlur={() => setTimeout(() => handleSearch(item.id, ''), 200)}
                                 />
                                 {filteredProducts.length > 0 && (
                                     <div className="m-search-results">
                                         {filteredProducts.map(p => (
-                                            <div key={p.id} className="m-search-item" onClick={() => selectProduct(item.id, p)}>
+                                            <div key={p.id} className="m-search-item" onMouseDown={() => selectProduct(item.id, p)}>
                                                 {p.name}
                                             </div>
                                         ))}
