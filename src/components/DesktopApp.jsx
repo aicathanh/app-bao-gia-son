@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Download, Printer, Save, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import productData from '../data/products.json';
@@ -23,6 +23,17 @@ const DesktopApp = () => {
     const [discount, setDiscount] = useState({ value: 0, note: '', visible: true });
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
+    const [notes, setNotes] = useState(() => {
+        const saved = localStorage.getItem('desktop_quotation_notes');
+        if (saved) return saved;
+        return `- Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng\n- Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng\nSTK: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM - CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG\nSTK: 862 999 888 - ACB - Nguyễn Xuân Thanh`;
+    });
+    const notesRef = useRef(null);
+
+    // Auto-save notes to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem('desktop_quotation_notes', notes);
+    }, [notes]);
 
     const generateQuoteId = (name) => {
         const getAbbreviation = (n) => {
@@ -82,6 +93,13 @@ const DesktopApp = () => {
         await exportToPDF('quotation-container', `BaoGia_${customer.name || 'KhachHang'}.pdf`);
         btn.innerHTML = text;
         confetti();
+    };
+
+    const handleSave = () => {
+        localStorage.setItem('desktop_quotation_notes', notes);
+        // We could also save the whole form state here if needed
+        confetti();
+        alert('Đã lưu nội dung ghi chú!');
     };
 
     return (
@@ -202,7 +220,7 @@ const DesktopApp = () => {
                                             <input type="text" className="note-input" value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} placeholder="" />
                                         </td>
                                         <td className="no-print" align="center">
-                                            <button className="del-btn" onClick={() => removeItem(item.id)}><Trash2 size={12} /></button>
+                                            <button type="button" className="del-btn" onClick={() => removeItem(item.id)}><Trash2 size={12} /></button>
                                         </td>
                                     </tr>
                                 )
@@ -226,7 +244,7 @@ const DesktopApp = () => {
                                     <td style={{ borderRight: '1px solid #e2e8f0' }}>
                                         <input type="text" className="note-input clean-input" value={shipping.note} onChange={(e) => setShipping({...shipping, note: e.target.value})} placeholder="" style={{ fontWeight: 'normal', color: '#4a5568' }} />
                                     </td>
-                                    <td colSpan="1" className="no-print"><button onClick={() => setShipping({...shipping, visible: false, value: 0})}>x</button></td>
+                                    <td colSpan="1" className="no-print"><button type="button" onClick={() => setShipping({...shipping, visible: false, value: 0})}>x</button></td>
                                 </tr>
                             )}
                             {discount.visible && (
@@ -247,13 +265,13 @@ const DesktopApp = () => {
                                     <td style={{ borderRight: '1px solid #e2e8f0' }}>
                                         <input type="text" className="note-input clean-input" value={discount.note} onChange={(e) => setDiscount({...discount, note: e.target.value})} placeholder="" style={{ fontWeight: 'normal', color: '#4a5568' }} />
                                     </td>
-                                    <td colSpan="1" className="no-print"><button onClick={() => setDiscount({...discount, visible: false, value: 0})}>x</button></td>
+                                    <td colSpan="1" className="no-print"><button type="button" onClick={() => setDiscount({...discount, visible: false, value: 0})}>x</button></td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                     <div className="btn-group no-print">
-                        <button className="btn-add" onClick={addItem}><Plus size={14} /> Thêm sản phẩm</button>
+                        <button type="button" className="btn-add" onClick={addItem}><Plus size={14} /> Thêm sản phẩm</button>
                     </div>
                 </div>
 
@@ -264,17 +282,26 @@ const DesktopApp = () => {
                 </div>
 
                 <div className="footer-section">
-                    <div className="notes-container">
+                     <div className="notes-container">
                         <div className="notes-title">Ghi chú:</div>
-                        <div className="editable-notes" 
-                            style={{ border: '1px dashed #e2e8f0', padding: '10px', borderRadius: '4px', minHeight: '60px' }}
-                            contentEditable 
-                            dangerouslySetInnerHTML={{ __html: `
-                            - Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng<br/>
-                            - Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng<br/>
-                            <b>STK: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM - CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG</b><br/>
-                            <b>STK: 862 999 888 - ACB - Nguyễn Xuân Thanh</b>
-                        `}} />
+                        <textarea 
+                            className="editable-notes-textarea" 
+                            style={{ 
+                                width: '100%', 
+                                border: '1px dashed #e2e8f0', 
+                                padding: '10px', 
+                                borderRadius: '4px', 
+                                minHeight: '100px', 
+                                outline: 'none',
+                                resize: 'none',
+                                fontSize: '14px',
+                                fontFamily: 'inherit',
+                                background: 'transparent'
+                            }}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            placeholder="Nhập ghi chú tại đây..."
+                        />
                     </div>
                     <div className="signature-area">
                         <div className="sig-title">Đại Diện Kinh Doanh</div>
@@ -284,9 +311,9 @@ const DesktopApp = () => {
             </div>
 
             <div className="floating-actions no-print">
-                <button id="dl-btn" className="fab fab-blue" onClick={handleDownload}><Download size={24} /> <span>PDF</span></button>
-                <button className="fab fab-red" onClick={() => window.print()}><Printer size={24} /> <span>In</span></button>
-                <button className="fab fab-green" onClick={() => confetti()}><Save size={24} /> <span>Lưu</span></button>
+                <button type="button" id="dl-btn" className="fab fab-blue" onClick={handleDownload}><Download size={24} /> <span>PDF</span></button>
+                <button type="button" className="fab fab-red" onClick={() => window.print()}><Printer size={24} /> <span>In</span></button>
+                <button type="button" className="fab fab-green" onClick={handleSave}><Save size={24} /> <span>Lưu</span></button>
             </div>
         </div>
     );
