@@ -285,16 +285,16 @@ const DesktopApp = () => {
                      <div className="notes-container">
                         <div className="notes-title">Ghi chú:</div>
                         <textarea 
-                            className="editable-notes-textarea" 
+                            className="editable-notes-textarea no-print" 
                             style={{ 
                                 width: '100%', 
                                 border: '1px dashed #e2e8f0', 
                                 padding: '10px', 
                                 borderRadius: '4px', 
-                                minHeight: '100px', 
+                                minHeight: '80px', 
                                 outline: 'none',
                                 resize: 'none',
-                                fontSize: '14px',
+                                fontSize: '13px',
                                 fontFamily: 'inherit',
                                 background: 'transparent'
                             }}
@@ -302,6 +302,9 @@ const DesktopApp = () => {
                             onChange={(e) => setNotes(e.target.value)}
                             placeholder="Nhập ghi chú tại đây..."
                         />
+                        <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.4' }}>
+                            {notes}
+                        </div>
                     </div>
                     <div className="signature-area">
                         <div className="sig-title">Đại Diện Kinh Doanh</div>
