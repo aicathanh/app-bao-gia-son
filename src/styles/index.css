@@ -259,7 +259,7 @@ input[type=number] {
 .only-print { display: none; }
 
 @media print {
-  @page { size: A4 landscape; margin: 5mm; }
+  @page { margin: 10mm; }
   .no-print { display: none !important; }
   .only-print { display: block !important; }
   

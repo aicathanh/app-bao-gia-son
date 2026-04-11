@@ -32,17 +32,23 @@ export const exportToPDF = async (elementId, filename = 'Bao_Gia.pdf') => {
 
     
     const imgData = canvas.toDataURL('image/png');
+    
+    // A4 dimensions in mm
+    const pageWidth = 210;
+    const pageHeight = 297;
+    
+    // Calculate height to maintain aspect ratio
+    const imgHeight = (canvas.height * pageWidth) / canvas.width;
+    
     const pdf = new jsPDF({
-      orientation: 'landscape',
+      orientation: 'p',
       unit: 'mm',
       format: 'a4',
     });
 
-    const imgWidth = 297; // A4 Landscape width
-    const pageHeight = 210; // A4 Landscape height
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    // If the image is taller than a page, it will scale down,
+    // but here we focus on fitting the width of the table.
+    pdf.addImage(imgData, 'PNG', 0, 0, pageWidth, imgHeight);
     pdf.save(filename);
 
   } catch (error) {
