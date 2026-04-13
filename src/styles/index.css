@@ -241,18 +241,32 @@ input[type=number] {
 .fab-red { background: #e53e3e; }
 .fab-green { background: #2f855a; }
 
-.btn-group { margin-top: 10px; }
+.btn-group { margin-top: 10px; display: flex; gap: 10px; }
 .btn-add {
   padding: 8px 16px;
   background: var(--secondary);
   color: white;
-  border-radius: 4px;
+  border-radius: 20px;
   border: none;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-add:hover { transform: translateY(-1px); opacity: 0.9; }
+
+.btn-shipping {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-discount {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
 

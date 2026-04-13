@@ -19,8 +19,8 @@ const DesktopApp = () => {
         phone: ''
     });
 
-    const [shipping, setShipping] = useState({ value: 0, note: '', visible: true });
-    const [discount, setDiscount] = useState({ value: 0, note: '', visible: true });
+    const [shipping, setShipping] = useState({ value: 0, note: '', visible: false });
+    const [discount, setDiscount] = useState({ value: 0, note: '', visible: false });
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
     const [notes, setNotes] = useState(() => {
@@ -272,6 +272,12 @@ const DesktopApp = () => {
                     </table>
                     <div className="btn-group no-print">
                         <button type="button" className="btn-add" onClick={addItem}><Plus size={14} /> Thêm sản phẩm</button>
+                        {!shipping.visible && (
+                            <button type="button" className="btn-add btn-shipping" onClick={() => setShipping({...shipping, visible: true})}><Plus size={14} /> Thêm Vận Chuyển</button>
+                        )}
+                        {!discount.visible && (
+                            <button type="button" className="btn-add btn-discount" onClick={() => setDiscount({...discount, visible: true})}><Plus size={14} /> Thêm Giảm Giá</button>
+                        )}
                     </div>
                 </div>
 
