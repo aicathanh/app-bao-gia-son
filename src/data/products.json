@@ -271,6 +271,46 @@
       }
     },
     {
+      "id": 141,
+      "name": "Lót Giả Gỗ (Wood Primer Paint)",
+      "p_prices": {
+        "1": 198000,
+        "3.5": 682000
+      }
+    },
+    {
+      "id": 142,
+      "name": "Màu Giả Gỗ Vách/Trần (Plank Paint)",
+      "p_prices": {
+        "1": 297000,
+        "3.5": 1028500
+      }
+    },
+    {
+      "id": 143,
+      "name": "Màu Giả Gỗ Sàn (Decking Paint)",
+      "p_prices": {
+        "1": 385000,
+        "3.5": 1355200
+      }
+    },
+    {
+      "id": 144,
+      "name": "Phủ Bóng Vách/Trần (Shield)",
+      "p_prices": {
+        "1": 192500,
+        "3.5": 662200
+      }
+    },
+    {
+      "id": 145,
+      "name": "Phủ Bóng Sàn (Hard Shield)",
+      "p_prices": {
+        "1": 286000,
+        "3.5": 990000
+      }
+    },
+    {
       "id": 131,
       "name": "Lót Kim Loại Chống Gỉ (Metal Primer) (LMCP)",
       "p_prices": {
