@@ -182,6 +182,24 @@
     },
     {
       "id": 121,
+      "name": "Phủ Bóng Lacquer 2K (2K71 Nội Thất)",
+      "p_prices": {
+        "1": 172800,
+        "5": 810000,
+        "20": 3024000
+      }
+    },
+    {
+      "id": 122,
+      "name": "Phủ Bóng Lacquer 2K (2K71 Ngoại Thất)",
+      "p_prices": {
+        "1": 201960,
+        "5": 955800,
+        "20": 3607200
+      }
+    },
+    {
+      "id": 123,
       "name": "Sơn 2in1 Trong Nhà 2K (Finish 2K71)",
       "p_prices": {
         "1": 178200,
@@ -190,7 +208,16 @@
       }
     },
     {
-      "id": 122,
+      "id": 124,
+      "name": "Sơn 2in1 Ngoài Trời 2K (Finish 2K71)",
+      "p_prices": {
+        "1": 207360,
+        "5": 982800,
+        "20": 3715200
+      }
+    },
+    {
+      "id": 125,
       "name": "Màu Bệt Trong Nhà 2K (2K71)",
       "p_prices": {
         "1": 183600,
@@ -199,7 +226,34 @@
       }
     },
     {
-      "id": 123,
+      "id": 126,
+      "name": "Màu Bệt Ngoài Trời 2K (2K71)",
+      "p_prices": {
+        "1": 212760,
+        "5": 1009800,
+        "20": 3823200
+      }
+    },
+    {
+      "id": 127,
+      "name": "Phủ Bóng Lacquer 2K (MX83 Nội Thất)",
+      "p_prices": {
+        "1": 199800,
+        "5": 918000,
+        "20": 3564000
+      }
+    },
+    {
+      "id": 128,
+      "name": "Phủ Bóng Lacquer 2K (MX83 Ngoại Thất)",
+      "p_prices": {
+        "1": 228960,
+        "5": 1063800,
+        "20": 4147200
+      }
+    },
+    {
+      "id": 129,
       "name": "Sơn 2in1 Trong Nhà 2K (Finish MX83)",
       "p_prices": {
         "1": 205200,
@@ -208,7 +262,16 @@
       }
     },
     {
-      "id": 124,
+      "id": 130,
+      "name": "Sơn 2in1 Ngoài Trời 2K (Finish MX83)",
+      "p_prices": {
+        "1": 234360,
+        "5": 1117800,
+        "20": 4255200
+      }
+    },
+    {
+      "id": 131,
       "name": "Màu Bệt Trong Nhà 2K (Wood Paint MX83)",
       "p_prices": {
         "1": 210600,
@@ -217,7 +280,16 @@
       }
     },
     {
-      "id": 125,
+      "id": 132,
+      "name": "Màu Bệt Ngoài Trời 2K (Wood Paint MX83)",
+      "p_prices": {
+        "1": 239760,
+        "5": 1144800,
+        "20": 4363200
+      }
+    },
+    {
+      "id": 133,
       "name": "Phủ Bóng Lacquer 2K (2K33 Nội Thất)",
       "p_prices": {
         "1": 205200,
@@ -226,7 +298,7 @@
       }
     },
     {
-      "id": 126,
+      "id": 134,
       "name": "Phủ Bóng Lacquer 2K (2K33 Ngoại Thất)",
       "p_prices": {
         "1": 234360,
@@ -235,7 +307,7 @@
       }
     },
     {
-      "id": 127,
+      "id": 135,
       "name": "Sơn 2in1 Trong Nhà 2K (Finish 2K33)",
       "p_prices": {
         "1": 210600,
@@ -244,7 +316,16 @@
       }
     },
     {
-      "id": 128,
+      "id": 136,
+      "name": "Sơn 2in1 Ngoài Trời 2K (Finish 2K33)",
+      "p_prices": {
+        "1": 239760,
+        "5": 1144800,
+        "20": 4363200
+      }
+    },
+    {
+      "id": 137,
       "name": "Màu Bệt Trong Nhà 2K (Wood Paint 2K33)",
       "p_prices": {
         "1": 216000,
@@ -253,7 +334,16 @@
       }
     },
     {
-      "id": 129,
+      "id": 138,
+      "name": "Màu Bệt Ngoài Trời 2K (Wood Paint 2K33)",
+      "p_prices": {
+        "1": 245160,
+        "5": 1171800,
+        "20": 4471200
+      }
+    },
+    {
+      "id": 139,
       "name": "Sơn Ngoại Thất & Sàn 2K (2K72)",
       "p_prices": {
         "1": 199800,
@@ -262,7 +352,7 @@
       }
     },
     {
-      "id": 130,
+      "id": 140,
       "name": "Phủ Màu Giả Gỗ Kim Loại (1K) (LWF)",
       "p_prices": {
         "1": 297000,
@@ -271,7 +361,7 @@
       }
     },
     {
-      "id": 131,
+      "id": 141,
       "name": "Lót Giả Gỗ Tấm Xi Măng (Fiber Cement Wood Primer)",
       "p_prices": {
         "1": 198000,
@@ -280,7 +370,7 @@
       }
     },
     {
-      "id": 132,
+      "id": 142,
       "name": "Màu Giả Gỗ Vách/Trần Tấm Xi Măng (Fiber Cement Plank Paint)",
       "p_prices": {
         "1": 297000,
@@ -289,7 +379,7 @@
       }
     },
     {
-      "id": 133,
+      "id": 143,
       "name": "Màu Giả Gỗ Sàn Tấm Xi Măng (Fiber Cement Decking Paint)",
       "p_prices": {
         "1": 385000,
@@ -298,7 +388,7 @@
       }
     },
     {
-      "id": 134,
+      "id": 144,
       "name": "Phủ Bóng Vách/Trần Tấm Xi Măng (Fiber Cement Shield)",
       "p_prices": {
         "1": 192500,
@@ -307,7 +397,7 @@
       }
     },
     {
-      "id": 135,
+      "id": 145,
       "name": "Phủ Bóng Sàn Tấm Xi Măng (Fiber Cement Hard Shield)",
       "p_prices": {
         "1": 286000,
@@ -316,7 +406,7 @@
       }
     },
     {
-      "id": 136,
+      "id": 146,
       "name": "Lót Kim Loại Chống Gỉ (Metal Primer) (LMCP)",
       "p_prices": {
         "1": 217080,
@@ -325,7 +415,7 @@
       }
     },
     {
-      "id": 137,
+      "id": 147,
       "name": "Phủ Màu Kim Loại (Metal Coat Finish) (LMCF)",
       "p_prices": {
         "1": 237600,
@@ -334,7 +424,7 @@
       }
     },
     {
-      "id": 138,
+      "id": 148,
       "name": "Sơn Kim Loại 2 in 1 (DTM Metal Coat) (LDTM)",
       "p_prices": {
         "1": 254880,
@@ -343,7 +433,16 @@
       }
     },
     {
-      "id": 139,
+      "id": 149,
+      "name": "Metal Coat Finish giả gỗ (LWF)",
+      "p_prices": {
+        "1": 297000,
+        "5": 1366200,
+        "20": 5303880
+      }
+    },
+    {
+      "id": 150,
       "name": "Lót Kim Loại 2K (Metal Coat Primer 2K)",
       "p_prices": {
         "1": 183600,
@@ -352,7 +451,7 @@
       }
     },
     {
-      "id": 140,
+      "id": 151,
       "name": "Phủ Màu Kim Loại 2K (Metal Coat Finish 2K)",
       "p_prices": {
         "1": 199800,
@@ -361,7 +460,7 @@
       }
     },
     {
-      "id": 141,
+      "id": 152,
       "name": "Kim Loại 2 in 1 2K (Metal Coat 2in1 2K)",
       "p_prices": {
         "1": 205200,

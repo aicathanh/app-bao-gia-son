@@ -48,9 +48,8 @@ def sync():
             if len(parts) >= 6:
                 name = parts[2]
                 
-                # Extract code and deduplicate
-                code = extract_product_code(name)
-                if code in seen_codes:
+                # Deduplicate by full name instead of code to avoid skipping different products with same code
+                if name in seen_codes:
                     continue
                 
                 p1 = clean_price(parts[3])
@@ -58,7 +57,7 @@ def sync():
                 p20 = clean_price(parts[5])
                 
                 if p1 or p5 or p20:
-                    seen_codes.add(code)
+                    seen_codes.add(name)
                     if "Chất Đóng Rắn" in name:
                          new_products.append({"id": 148, "name": name, "p_prices": { "1": p1, "0.5": p5, "0.1": p20 }})
                     else:
