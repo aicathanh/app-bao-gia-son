@@ -229,9 +229,9 @@
       "id": 126,
       "name": "Phủ Bóng Lacquer 2K (2K33 Ngoại Thất)",
       "p_prices": {
-        "1": 235200,
-        "5": 1154400,
-        "20": 4293600
+        "1": 234360,
+        "5": 1150200,
+        "20": 4276800
       }
     },
     {
@@ -271,32 +271,52 @@
       }
     },
     {
-      "id": 271,
-      "name": "Lót Giả Gỗ Tấm Xi Măng (Fiber Cement Wood Primer)",
-      "p_prices": { "1": 198000, "3.5": 682000 }
-    },
-    {
-      "id": 272,
-      "name": "Màu Giả Gỗ Vách/Trần Tấm Xi Măng (Fiber Cement Plank Paint)",
-      "p_prices": { "1": 297000, "3.5": 1028500 }
-    },
-    {
-      "id": 273,
-      "name": "Màu Giả Gỗ Sàn Tấm Xi Măng (Fiber Cement Decking Paint)",
-      "p_prices": { "1": 385000, "3.5": 1355200 }
-    },
-    {
-      "id": 274,
-      "name": "Phủ Bóng Vách/Trần Tấm Xi Măng (Fiber Cement Shield)",
-      "p_prices": { "1": 192500, "3.5": 662200 }
-    },
-    {
-      "id": 275,
-      "name": "Phủ Bóng Sàn Tấm Xi Măng (Fiber Cement Hard Shield)",
-      "p_prices": { "1": 286000, "3.5": 990000 }
-    },
-    {
       "id": 131,
+      "name": "Lót Giả Gỗ Tấm Xi Măng (Fiber Cement Wood Primer)",
+      "p_prices": {
+        "1": 198000,
+        "5": 682000,
+        "20": 0
+      }
+    },
+    {
+      "id": 132,
+      "name": "Màu Giả Gỗ Vách/Trần Tấm Xi Măng (Fiber Cement Plank Paint)",
+      "p_prices": {
+        "1": 297000,
+        "5": 1028500,
+        "20": 0
+      }
+    },
+    {
+      "id": 133,
+      "name": "Màu Giả Gỗ Sàn Tấm Xi Măng (Fiber Cement Decking Paint)",
+      "p_prices": {
+        "1": 385000,
+        "5": 1355200,
+        "20": 0
+      }
+    },
+    {
+      "id": 134,
+      "name": "Phủ Bóng Vách/Trần Tấm Xi Măng (Fiber Cement Shield)",
+      "p_prices": {
+        "1": 192500,
+        "5": 662200,
+        "20": 0
+      }
+    },
+    {
+      "id": 135,
+      "name": "Phủ Bóng Sàn Tấm Xi Măng (Fiber Cement Hard Shield)",
+      "p_prices": {
+        "1": 286000,
+        "5": 990000,
+        "20": 0
+      }
+    },
+    {
+      "id": 136,
       "name": "Lót Kim Loại Chống Gỉ (Metal Primer) (LMCP)",
       "p_prices": {
         "1": 217080,
@@ -305,7 +325,7 @@
       }
     },
     {
-      "id": 132,
+      "id": 137,
       "name": "Phủ Màu Kim Loại (Metal Coat Finish) (LMCF)",
       "p_prices": {
         "1": 237600,
@@ -314,7 +334,7 @@
       }
     },
     {
-      "id": 133,
+      "id": 138,
       "name": "Sơn Kim Loại 2 in 1 (DTM Metal Coat) (LDTM)",
       "p_prices": {
         "1": 254880,
@@ -323,7 +343,7 @@
       }
     },
     {
-      "id": 134,
+      "id": 139,
       "name": "Lót Kim Loại 2K (Metal Coat Primer 2K)",
       "p_prices": {
         "1": 183600,
@@ -332,7 +352,7 @@
       }
     },
     {
-      "id": 135,
+      "id": 140,
       "name": "Phủ Màu Kim Loại 2K (Metal Coat Finish 2K)",
       "p_prices": {
         "1": 199800,
@@ -341,7 +361,7 @@
       }
     },
     {
-      "id": 136,
+      "id": 141,
       "name": "Kim Loại 2 in 1 2K (Metal Coat 2in1 2K)",
       "p_prices": {
         "1": 205200,
