@@ -365,7 +365,7 @@
       "name": "Lót Giả Gỗ Tấm Xi Măng (Fiber Cement Wood Primer)",
       "p_prices": {
         "1": 198000,
-        "5": 682000,
+        "3.5": 682000,
         "20": 0
       }
     },
@@ -374,7 +374,7 @@
       "name": "Màu Giả Gỗ Vách/Trần Tấm Xi Măng (Fiber Cement Plank Paint)",
       "p_prices": {
         "1": 297000,
-        "5": 1028500,
+        "3.5": 1028500,
         "20": 0
       }
     },
@@ -383,7 +383,7 @@
       "name": "Màu Giả Gỗ Sàn Tấm Xi Măng (Fiber Cement Decking Paint)",
       "p_prices": {
         "1": 385000,
-        "5": 1355200,
+        "3.5": 1355200,
         "20": 0
       }
     },
@@ -392,7 +392,7 @@
       "name": "Phủ Bóng Vách/Trần Tấm Xi Măng (Fiber Cement Shield)",
       "p_prices": {
         "1": 192500,
-        "5": 662200,
+        "3.5": 662200,
         "20": 0
       }
     },
@@ -401,7 +401,7 @@
       "name": "Phủ Bóng Sàn Tấm Xi Măng (Fiber Cement Hard Shield)",
       "p_prices": {
         "1": 286000,
-        "5": 990000,
+        "3.5": 990000,
         "20": 0
       }
     },
