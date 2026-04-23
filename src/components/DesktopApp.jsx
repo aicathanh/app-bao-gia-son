@@ -191,7 +191,7 @@ const DesktopApp = () => {
                                             <div className="clean-input center">
                                                 {item.productId ? (
                                                     <select className="clean-input center" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} style={{ textAlignLast: 'center' }}>
-                                                        {Object.keys(selectedProduct.p_prices).map(s => <option key={s} value={s}>{s}</option>)}
+                                                        {Object.keys(selectedProduct.p_prices).sort((a, b) => parseFloat(a) - parseFloat(b)).map(s => <option key={s} value={s}>{s}</option>)}
                                                     </select>
                                                 ) : (
                                                     <input className="clean-input center" type="text" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} />

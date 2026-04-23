@@ -189,7 +189,9 @@ const MobileApp = () => {
                                     gridTemplateColumns: 'repeat(3, 1fr)', 
                                     gap: '8px' 
                                 }}>
-                                    {Object.entries(selectedProduct.p_prices).map(([size, price]) => (
+                                    {Object.entries(selectedProduct.p_prices)
+                                        .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+                                        .map(([size, price]) => (
                                         <div key={size} style={{ 
                                             background: '#f8fafc', 
                                             padding: '8px 4px', 
