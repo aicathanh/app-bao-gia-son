@@ -95,11 +95,60 @@ const DesktopApp = () => {
         confetti();
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         localStorage.setItem('desktop_quotation_notes', notes);
-        // We could also save the whole form state here if needed
+        
+        // --- SYNC TO CRM LOGIC ---
+        try {
+            const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+            const supabaseUrl = 'https://zbnnctvggpupdnjmydcu.supabase.co';
+            const supabaseKey = 'sb_publishable__Uc7k0lfdHFzBjWT-3o36w_ydCDXOT8';
+            const supabase = createClient(supabaseUrl, supabaseKey);
+
+            // Prepare product string: Name(Size-Qty)
+            const productList = items.map(item => {
+                const p = products.find(x => x.id === parseInt(item.productId));
+                let name = p ? p.name : (item.customName || 'SP Khác');
+                // Thêm ghi chú (màu sắc/bóng) vào sau tên sản phẩm
+                if (item.note) {
+                    name += ` (${item.note})`;
+                }
+                const price = getPrice(item);
+                const total = price * (item.quantity || 1);
+                return `${name}(${item.size}kg-${item.quantity}-${total})`;
+            }).join(', ');
+
+            const orderData = {
+                id: `ORD-${Date.now()}`,
+                quote_no: customer.quoteId,
+                customer_name: customer.name || 'Khách Vãng Lai',
+                customer_phone: customer.phone, // Mới
+                customer_address: customer.address, // Mới
+                amount: String(grandTotal),
+                products: productList,
+                status: 'quote',
+                created_at: new Date().toISOString()
+            };
+
+            console.log('Sending data to CRM:', orderData);
+            const { error } = await supabase.from('orders').upsert(orderData);
+            
+            if (error) {
+                console.error('CRM Sync Error Detail:', error);
+                alert('Lỗi Database: ' + error.message);
+                return;
+            }
+            
+            console.log('Synced to CRM successfully!');
+        } catch (err) {
+            console.error('CRM Sync Error:', err);
+            alert('Lỗi kết nối: ' + err.message);
+            return;
+        }
+        // -------------------------
+
         confetti();
-        alert('Đã lưu nội dung ghi chú!');
+        alert('Đã lưu và đồng bộ sang CRM thành công!');
     };
 
     return (
