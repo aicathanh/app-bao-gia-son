@@ -47,9 +47,11 @@
         }
 
         .header-actions { display: flex; gap: 8px; align-items: center; }
-        .btn-icon { display: flex; align-items: center; justify-content: center; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; white-space: nowrap; gap: 6px; }
-        .btn-primary { background: var(--primary); color: white; }
+        .btn-icon { display: flex; align-items: center; justify-content: center; border: none; padding: 10px 14px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; white-space: nowrap; gap: 8px; }
+        .btn-customer { background: #fff7ed; color: #9a3412; }
+        .btn-dashboard { background: #f0fdf4; color: #166534; }
         .btn-ghost { background: #f1f5f9; color: #64748b; }
+        .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: #fee2e2; color: #ef4444; }
 
         /* Kanban Board */
@@ -138,8 +140,8 @@
             </div>
 
             <div class="header-actions">
-                <button id="customer-btn" class="btn-icon btn-ghost"><i data-lucide="users"></i> <span>Khách</span></button>
-                <button id="dashboard-btn" class="btn-icon btn-ghost"><i data-lucide="bar-chart-3"></i> <span>T.Kê</span></button>
+                <button id="customer-btn" class="btn-icon btn-customer"><i data-lucide="users"></i> <span>Khách</span></button>
+                <button id="dashboard-btn" class="btn-icon btn-dashboard"><i data-lucide="bar-chart-3"></i> <span>Thống kê</span></button>
                 <button id="nav-staff-mgmt" class="btn-icon btn-ghost hidden"><i data-lucide="users"></i> <span>N.Sự</span></button>
                 <div style="text-align: right; margin-right: 10px;" class="no-mobile">
                     <div id="current-user-name" style="font-weight: 800; font-size: 0.85rem;">Admin</div>
@@ -324,7 +326,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide-static/dist/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="app.js"></script>
 </body>
