@@ -16,9 +16,41 @@ const StaffMobileApp = () => {
     // Staff state
     const [staff, setStaff] = useState(() => {
         const saved = localStorage.getItem('staff_profile');
-        return saved ? JSON.parse(saved) : { fullName: '', phone: '' };
+        return saved ? JSON.parse(saved) : { fullName: '', phone: '', isLoggedIn: false };
     });
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(!staff.fullName);
+    const [loginData, setLoginData] = useState({ user: '', pass: '' });
+    const [loginErr, setLoginErr] = useState('');
+
+    const handleLogin = async () => {
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+        const supabaseUrl = 'https://zbnnctvggpupdnjmydcu.supabase.co';
+        const supabaseKey = 'sb_publishable__Uc7k0lfdHFzBjWT-3o36w_ydCDXOT8';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        const { data, error } = await supabase
+            .from('staff_users')
+            .select('*')
+            .eq('username', loginData.user)
+            .eq('password', loginData.pass)
+            .single();
+
+        if (error || !data) {
+            setLoginErr('Sai tài khoản hoặc mật khẩu!');
+            return;
+        }
+
+        const newStaff = { ...staff, fullName: data.full_name, isLoggedIn: true };
+        setStaff(newStaff);
+        localStorage.setItem('staff_profile', JSON.stringify(newStaff));
+        setLoginErr('');
+    };
+
+    const handleLogout = () => {
+        const resetStaff = { fullName: '', phone: '', isLoggedIn: false };
+        setStaff(resetStaff);
+        localStorage.removeItem('staff_profile');
+    };
 
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [searchQuery, setSearchQuery] = useState({});
@@ -240,29 +272,61 @@ const StaffMobileApp = () => {
             {isProfileModalOpen && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
                     <div style={{ background: 'white', padding: '25px', borderRadius: '20px', width: '100%', maxWidth: '350px' }}>
-                        <h3 style={{ marginTop: 0 }}>Thông tin nhân viên</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <input 
-                                type="text" 
-                                placeholder="Họ và tên..." 
-                                value={staff.fullName} 
-                                onChange={(e) => setStaff({...staff, fullName: e.target.value})}
-                                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
-                            />
-                            <input 
-                                type="text" 
-                                placeholder="Số điện thoại..." 
-                                value={staff.phone} 
-                                onChange={(e) => setStaff({...staff, phone: e.target.value})}
-                                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
-                            />
-                            <button 
-                                onClick={() => staff.fullName && setIsProfileModalOpen(false)}
-                                style={{ background: '#2563eb', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}
-                            >
-                                Lưu và bắt đầu
-                            </button>
-                        </div>
+                        {!staff.isLoggedIn ? (
+                            <>
+                                <h3 style={{ marginTop: 0 }}>Đăng nhập Sales</h3>
+                                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '15px' }}>Dùng tài khoản CRM của bạn để đăng nhập.</p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Tên đăng nhập..." 
+                                        value={loginData.user} 
+                                        onChange={(e) => setLoginData({...loginData, user: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                                    />
+                                    <input 
+                                        type="password" 
+                                        placeholder="Mật khẩu..." 
+                                        value={loginData.pass} 
+                                        onChange={(e) => setLoginData({...loginData, pass: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                                    />
+                                    {loginErr && <div style={{ color: '#ef4444', fontSize: '11px' }}>{loginErr}</div>}
+                                    <button 
+                                        onClick={handleLogin}
+                                        style={{ background: '#2563eb', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}
+                                    >
+                                        Đăng nhập ngay
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                    <h3 style={{ margin: 0 }}>Cài đặt</h3>
+                                    <button onClick={handleLogout} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '10px' }}>Đăng xuất</button>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <div style={{ background: '#f8fafc', padding: '10px', borderRadius: '10px' }}>
+                                        <small style={{ color: '#64748b' }}>HỌ TÊN (KHỚP CRM)</small>
+                                        <div style={{ fontWeight: 'bold' }}>{staff.fullName}</div>
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Số điện thoại cá nhân..." 
+                                        value={staff.phone} 
+                                        onChange={(e) => setStaff({...staff, phone: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                                    />
+                                    <button 
+                                        onClick={() => setIsProfileModalOpen(false)}
+                                        style={{ background: '#2563eb', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none' }}
+                                    >
+                                        Bắt đầu báo giá
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

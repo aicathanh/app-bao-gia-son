@@ -15,9 +15,39 @@ const StaffDesktopApp = () => {
     // Staff state
     const [staff, setStaff] = useState(() => {
         const saved = localStorage.getItem('staff_profile');
-        return saved ? JSON.parse(saved) : { fullName: '', phone: '', bankInfo: '' };
+        return saved ? JSON.parse(saved) : { fullName: '', phone: '', bankInfo: '', isLoggedIn: false };
     });
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(!staff.fullName);
+    const [loginData, setLoginData] = useState({ user: '', pass: '' });
+    const [loginErr, setLoginErr] = useState('');
+
+    const handleLogin = async () => {
+        const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        const { data, error } = await supabase
+            .from('staff_users')
+            .select('*')
+            .eq('username', loginData.user)
+            .eq('password', loginData.pass)
+            .single();
+
+        if (error || !data) {
+            setLoginErr('Tên đăng nhập hoặc mật khẩu không đúng!');
+            return;
+        }
+
+        const newStaff = { ...staff, fullName: data.full_name, isLoggedIn: true };
+        setStaff(newStaff);
+        localStorage.setItem('staff_profile', JSON.stringify(newStaff));
+        setLoginErr('');
+    };
+
+    const handleLogout = () => {
+        const resetStaff = { fullName: '', phone: '', bankInfo: '', isLoggedIn: false };
+        setStaff(resetStaff);
+        localStorage.removeItem('staff_profile');
+    };
 
     const [customer, setCustomer] = useState({
         name: '',
@@ -403,66 +433,69 @@ const StaffDesktopApp = () => {
 
             {/* Profile Modal */}
             {isProfileModalOpen && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 2000
-                }}>
-                    <div style={{
-                        background: 'white',
-                        padding: '30px',
-                        borderRadius: '16px',
-                        width: '400px',
-                        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-                    }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '20px' }}>Cập nhật thông tin Sales</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>HỌ VÀ TÊN (In hoa trên báo giá)</label>
-                                <input 
-                                    type="text" 
-                                    value={staff.fullName} 
-                                    onChange={(e) => setStaff({...staff, fullName: e.target.value})}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                    placeholder="Ví dụ: Nguyễn Văn A"
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>SỐ ĐIỆN THOẠI</label>
-                                <input 
-                                    type="text" 
-                                    value={staff.phone} 
-                                    onChange={(e) => setStaff({...staff, phone: e.target.value})}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                                    placeholder="Ví dụ: 0912 345 678"
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', color: '#64748b', marginBottom: '5px' }}>THÔNG TIN CK (STK, Ngân hàng)</label>
-                                <textarea 
-                                    value={staff.bankInfo} 
-                                    onChange={(e) => setStaff({...staff, bankInfo: e.target.value})}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '60px' }}
-                                    placeholder="STK: 123456 - VCB - Tên TK"
-                                />
-                            </div>
-                            <button 
-                                onClick={() => {
-                                    if (staff.fullName) setIsProfileModalOpen(false);
-                                    else alert('Vui lòng nhập họ tên!');
-                                }}
-                                style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}
-                            >
-                                Lưu và tiếp tục
-                            </button>
-                        </div>
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '400px' }}>
+                        {!staff.isLoggedIn ? (
+                            <>
+                                <h3 style={{ marginTop: 0 }}>Đăng nhập nhân viên</h3>
+                                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px' }}>Vui lòng đăng nhập bằng tài khoản CRM để đồng bộ dữ liệu.</p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Tên đăng nhập..." 
+                                        value={loginData.user} 
+                                        onChange={(e) => setLoginData({...loginData, user: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                                    />
+                                    <input 
+                                        type="password" 
+                                        placeholder="Mật khẩu..." 
+                                        value={loginData.pass} 
+                                        onChange={(e) => setLoginData({...loginData, pass: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                                    />
+                                    {loginErr && <div style={{ color: '#ef4444', fontSize: '12px' }}>{loginErr}</div>}
+                                    <button 
+                                        onClick={handleLogin}
+                                        style={{ background: '#2563eb', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+                                    >
+                                        Đăng nhập ngay
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                    <h3 style={{ margin: 0 }}>Cài đặt báo giá</h3>
+                                    <button onClick={handleLogout} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}>Đăng xuất</button>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    <div>
+                                        <label style={{ fontSize: '11px', fontWeight: '700', color: '#64748b' }}>HỌ VÀ TÊN (ĐÃ KHỚP CRM)</label>
+                                        <input type="text" value={staff.fullName} disabled style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #eee', background: '#f8fafc' }} />
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Số điện thoại cá nhân..." 
+                                        value={staff.phone} 
+                                        onChange={(e) => setStaff({...staff, phone: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd' }}
+                                    />
+                                    <textarea 
+                                        placeholder="Thông tin chuyển khoản (STK, Ngân hàng, Tên TK)..." 
+                                        value={staff.bankInfo} 
+                                        onChange={(e) => setStaff({...staff, bankInfo: e.target.value})}
+                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #ddd', height: '80px' }}
+                                    />
+                                    <button 
+                                        onClick={() => setIsProfileModalOpen(false)}
+                                        style={{ background: '#2563eb', color: 'white', padding: '12px', borderRadius: '10px', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
+                                    >
+                                        Lưu và tiếp tục
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
