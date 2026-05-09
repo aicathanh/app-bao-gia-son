@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotus CRM - Pipeline</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div id="login-overlay" style="position: fixed; inset: 0; background: #1e293b; z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;">
+        <div style="background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; color: #1e293b;">
+            <div style="background: #eff6ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><i data-lucide="lock" style="color: #2563eb;"></i></div>
+            <h2 style="margin-bottom: 10px;">Yêu cầu mật khẩu</h2>
+            <input type="password" id="pass-input" placeholder="••••" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 1.5rem; letter-spacing: 5px; outline: none; margin-bottom: 15px;">
+            <button id="login-btn" style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">ĐĂNG NHẬP</button>
+            <p id="login-err" style="color: #ef4444; font-size: 0.8rem; margin-top: 10px; display: none;">Mật khẩu không đúng!</p>
+        </div>
+    </div>
+
+    <div class="app-layout" id="main-app" style="display: none;">
+        <header class="app-header">
+            <div class="logo"><i data-lucide="layout-dashboard"></i><span>LOTUS CRM <span>Pipeline</span></span></div>
+            <div class="search-bar"><i data-lucide="search"></i><input type="text" id="search-input" placeholder="Tìm kiếm..."></div>
+            <div class="header-actions">
+                <button id="customer-btn" class="btn-icon" style="background: #fff7ed; color: #9a3412;"><i data-lucide="users"></i> Khách hàng</button>
+                <button id="dashboard-btn" class="btn-icon" style="background: #f0fdf4; color: #166534;"><i data-lucide="bar-chart-3"></i> Thống kê</button>
+                <button id="logout-btn" class="btn-icon" style="background: #f1f5f9; color: #64748b;"><i data-lucide="log-out"></i> Thoát</button>
+            </div>
+        </header>
+
+        <main class="board-container">
+            <div class="board-wrapper">
+                <div class="column" data-status="quote"><div class="column-header"><div class="header-top"><h2>Báo Giá</h2><span class="count">0</span></div><div class="total-amount">0 đ</div></div><div class="cards-container"></div></div>
+                <div class="column" data-status="ordered"><div class="column-header"><div class="header-top"><h2>Chốt Đơn</h2><span class="count">0</span></div><div class="total-amount">0 đ</div></div><div class="cards-container"></div></div>
+                <div class="column" data-status="paid"><div class="column-header"><div class="header-top"><h2>Thu Tiền</h2><span class="count">0</span></div><div class="total-amount">0 đ</div></div><div class="cards-container"></div></div>
+                <div class="column" data-status="debt"><div class="column-header"><div class="header-top"><h2>Công Nợ</h2><span class="count">0</span></div><div class="total-amount">0 đ</div></div><div class="cards-container"></div></div>
+                <div class="column" data-status="archived"><div class="column-header"><div class="header-top"><h2>Lưu Trữ</h2><span class="count">0</span></div><div class="total-amount">0 đ</div></div><div class="cards-container"></div></div>
+                <div class="column" data-status="lost"><div class="column-header" style="background: #fef2f2; border-radius: 12px 12px 0 0;"><div class="header-top"><h2 style="color: #991b1b;">Rớt Đơn</h2><span class="count">0</span></div><div class="total-amount" style="background: #fee2e2; color: #991b1b;">0 đ</div></div><div class="cards-container" style="background: #fff1f1;"></div></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals (Moved to bottom of body to avoid z-index issues) -->
+    <div id="lost-reason-modal" class="modal" style="z-index: 20000;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <header><h3>Lý do rớt đơn?</h3></header>
+            <div style="padding: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-lost-reason" data-reason="Giá cao quá">Giá cao quá</button>
+                <button class="btn-lost-reason" data-reason="Khách lấy bên đối thủ">Khách lấy bên đối thủ</button>
+                <button class="btn-lost-reason" data-reason="Hết hàng / Không đủ màu">Hết hàng / Không đủ màu</button>
+                <button class="btn-lost-reason" data-reason="Khách đổi ý">Khách đổi ý</button>
+                <input type="text" id="custom-lost-reason" placeholder="Lý do khác..." style="padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                <button id="submit-lost-reason" style="padding: 12px; background: #991b1b; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Xác nhận Rớt Đơn</button>
+            </div>
+            <button class="modal-close-trigger" style="margin-top: 10px; background: none; border: none; color: #64748b; cursor: pointer;">Bỏ qua</button>
+        </div>
+    </div>
+
+    <div id="customer-modal" class="modal" style="z-index: 20000;"><div class="modal-content" style="max-width: 900px; width: 95%;"><header><h3><i data-lucide="users"></i> Danh sách khách hàng</h3><div style="display:flex; gap:10px;"><button id="export-btn" class="btn-icon" style="background:#166534; color:white;"><i data-lucide="download"></i> Xuất Excel</button><button class="modal-close-trigger"><i data-lucide="x"></i></button></div></header><div style="max-height:70vh; overflow-y:auto; margin-top:20px;"><table class="data-table"><thead><tr><th>Họ tên</th><th>SĐT</th><th>Địa chỉ</th><th>Tổng mua</th><th>Đơn</th></tr></thead><tbody id="customer-table-body"></tbody></table></div></div></div>
+    <div id="detail-modal" class="modal" style="z-index: 20000;"><div class="modal-content"><header><h3 id="modal-title">Chi tiết</h3><button class="modal-close-trigger"><i data-lucide="x"></i></button></header><div id="modal-body"></div></div></div>
+    <div id="payment-modal" class="modal" style="z-index: 20000;"><div class="modal-content" style="max-width: 400px; text-align: center;"><header><h3>Tài khoản nhận tiền</h3></header><div style="padding: 20px 0; display: flex; flex-direction: column; gap: 12px;"><button class="btn-account cty" data-account="Công ty"><i data-lucide="building-2"></i> Công ty</button><button class="btn-account thanh" data-account="Thanh"><i data-lucide="user"></i> Thanh</button></div><button class="modal-close-trigger" style="margin-top: 10px; background: none; border: none; color: #64748b; cursor: pointer;">Bỏ qua</button></div></div>
+    <div id="dashboard-modal" class="modal" style="z-index: 20000;"><div class="modal-content" style="max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto;"><header style="position: sticky; top:0; background:white; z-index:5; padding-bottom:15px; border-bottom:1px solid #eee;"><h3><i data-lucide="pie-chart"></i> Báo cáo kinh doanh</h3><button class="modal-close-trigger"><i data-lucide="x"></i></button></header><div class="dashboard-sections" style="padding-top:20px;"><div id="active-account-stats"></div><div class="dashboard-grid"><div class="stat-card"><h4>Top Khách Hàng</h4><div id="active-top-customers"></div></div><div class="stat-card"><h4>Top Sản Phẩm</h4><div id="active-top-products"></div></div></div><hr style="margin: 30px 0;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><div class="section-title">LỊCH SỬ HOÀN THÀNH</div><div style="display: flex; gap: 8px;"><select id="year-filter" class="header-select"></select><select id="month-filter" class="header-select"><option value="all">Tất cả tháng</option><option value="0">T1</option><option value="1">T2</option><option value="2">T3</option><option value="3">T4</option><option value="4">T5</option><option value="5">T6</option><option value="6">T7</option><option value="7">T8</option><option value="8">T9</option><option value="9">T10</option><option value="10">T11</option><option value="11">T12</option></select></div></div><div id="archived-account-stats"></div><div class="dashboard-grid"><div class="stat-card"><h4>Khách Hàng (Lịch sử)</h4><div id="archived-top-customers"></div></div><div class="stat-card"><h4>Sản Phẩm (Lịch sử)</h4><div id="archived-top-products"></div></div></div></div></div></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
