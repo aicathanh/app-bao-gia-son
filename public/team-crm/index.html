@@ -130,7 +130,9 @@
             </div>
 
             <div class="header-actions">
-                <button id="nav-staff-mgmt" class="btn-icon btn-ghost hidden"><i data-lucide="users"></i> <span>Nhân sự</span></button>
+                <button id="customer-btn" class="btn-icon btn-ghost"><i data-lucide="users"></i> <span>Khách</span></button>
+                <button id="dashboard-btn" class="btn-icon btn-ghost"><i data-lucide="bar-chart-3"></i> <span>T.Kê</span></button>
+                <button id="nav-staff-mgmt" class="btn-icon btn-ghost hidden"><i data-lucide="users"></i> <span>N.Sự</span></button>
                 <div style="text-align: right; margin-right: 10px;" class="no-mobile">
                     <div id="current-user-name" style="font-weight: 800; font-size: 0.85rem;">Admin</div>
                     <div id="current-user-role" style="font-size: 0.65rem; color: #64748b;">MANAGER</div>
@@ -185,9 +187,86 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="modal-title">Chi tiết</h3>
-                <button class="close-btn" onclick="document.getElementById('detail-modal').classList.remove('active')">&times;</button>
+                <button class="close-btn modal-close-trigger">&times;</button>
             </div>
             <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- MODAL KHÁCH HÀNG -->
+    <div id="customer-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px; width: 95%;">
+            <div class="modal-header">
+                <h3>Danh sách khách hàng</h3>
+                <div style="display:flex; gap:10px;">
+                    <button id="export-btn" class="btn-icon btn-primary"><i data-lucide="download"></i> Xuất Excel</button>
+                    <button class="close-btn modal-close-trigger">&times;</button>
+                </div>
+            </div>
+            <div style="max-height:70vh; overflow-y:auto;">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>SĐT</th>
+                            <th>Địa chỉ</th>
+                            <th>Tổng mua</th>
+                            <th>Đơn</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL THỐNG KÊ -->
+    <div id="dashboard-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px; width: 95%;">
+            <div class="modal-header">
+                <h3>Báo cáo doanh thu</h3>
+                <button class="close-btn modal-close-trigger">&times;</button>
+            </div>
+            <div id="dashboard-body">
+                <div id="active-account-stats"></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-top:20px;">
+                    <div style="padding:15px; background:#f8fafc; border-radius:12px;">
+                        <h4 style="font-size:0.8rem; margin-bottom:10px;">TOP KHÁCH HÀNG</h4>
+                        <div id="active-top-customers"></div>
+                    </div>
+                    <div style="padding:15px; background:#f8fafc; border-radius:12px;">
+                        <h4 style="font-size:0.8rem; margin-bottom:10px;">TOP SẢN PHẨM</h4>
+                        <div id="active-top-products"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PAYMENT -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header"><h3>Tài khoản nhận tiền</h3></div>
+            <div style="padding: 20px 0; display: flex; flex-direction: column; gap: 12px;">
+                <button class="btn-account-move" style="padding:15px; border:2px solid #2563eb; border-radius:12px; background:white; color:#2563eb; font-weight:800; cursor:pointer;">Công ty</button>
+                <button class="btn-account-move" style="padding:15px; border:2px solid #059669; border-radius:12px; background:white; color:#059669; font-weight:800; cursor:pointer;">Thanh</button>
+            </div>
+            <button class="modal-close-trigger" style="margin-top: 10px; background: none; border: none; color: #64748b; cursor: pointer;">Bỏ qua</button>
+        </div>
+    </div>
+
+    <!-- MODAL LOST REASON -->
+    <div id="lost-reason-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-header"><h3>Lý do rớt đơn?</h3></div>
+            <div style="padding: 20px 0; display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn-lost-reason-move" data-reason="Giá cao quá" style="padding:10px; border:1px solid #ddd; border-radius:8px; background:white; cursor:pointer;">Giá cao quá</button>
+                <button class="btn-lost-reason-move" data-reason="Khách lấy bên đối thủ" style="padding:10px; border:1px solid #ddd; border-radius:8px; background:white; cursor:pointer;">Khách lấy bên đối thủ</button>
+                <button class="btn-lost-reason-move" data-reason="Khách đổi ý" style="padding:10px; border:1px solid #ddd; border-radius:8px; background:white; cursor:pointer;">Khách đổi ý</button>
+                <input type="text" id="custom-lost-reason" placeholder="Lý do khác..." style="padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+                <button id="submit-lost-reason" style="padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Xác nhận Rớt Đơn</button>
+            </div>
+            <button class="modal-close-trigger" style="margin-top: 10px; background: none; border: none; color: #64748b; cursor: pointer;">Bỏ qua</button>
         </div>
     </div>
 
