@@ -6,9 +6,6 @@ let currentUser = null;
 let allOrders = [];
 let allStaff = [];
 
-const STATUS_MAP = { 'quote': 'Báo Giá', 'ordered': 'Chốt Đơn', 'paid': 'Thu Tiền', 'debt': 'Công Nợ', 'lost': 'Rớt Đơn' };
-
-// Utility
 const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
 // Auth
@@ -18,9 +15,7 @@ async function login() {
 
     try {
         const { data, error } = await client.from('staff_users').select('*').eq('username', user).eq('password', pass).single();
-        
         if (error || !data) {
-            // Fallback for first time if table not created
             if (user === 'admin' && pass === '6688') {
                 currentUser = { username: 'admin', full_name: 'Manager', role: 'manager' };
             } else {
@@ -30,12 +25,9 @@ async function login() {
         } else {
             currentUser = data;
         }
-
         localStorage.setItem('team_crm_user', JSON.stringify(currentUser));
         initApp();
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
 }
 
 function checkAuth() {
@@ -48,6 +40,7 @@ function checkAuth() {
 
 async function initApp() {
     document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('main-app').style.display = 'flex';
     document.getElementById('current-user-name').innerText = currentUser.full_name;
     document.getElementById('current-user-role').innerText = currentUser.role.toUpperCase();
 
@@ -59,13 +52,14 @@ async function initApp() {
     }
 
     refreshData();
+    lucide.createIcons();
 }
 
 async function fetchStaff() {
     const { data } = await client.from('staff_users').select('full_name');
     if (data) {
-        allStaff = data.map(s => s.full_name);
         const filter = document.getElementById('staff-filter');
+        filter.innerHTML = '<option value="all">Tất cả nhân viên</option>';
         data.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.full_name;
@@ -77,8 +71,6 @@ async function fetchStaff() {
 
 async function refreshData() {
     let query = client.from('orders').select('*').order('created_at', { ascending: false });
-    
-    // If sales, only see own leads
     if (currentUser.role === 'sales') {
         query = query.eq('salesperson_name', currentUser.full_name);
     }
@@ -86,59 +78,7 @@ async function refreshData() {
     const { data, error } = await query;
     if (error) return;
     allOrders = data;
-    
-    renderDashboard();
     renderBoard();
-}
-
-function renderDashboard() {
-    const paidOrders = allOrders.filter(o => o.status === 'paid');
-    const totalRevenue = paidOrders.reduce((s, o) => s + parseFloat(o.amount || 0), 0);
-    const totalQuotes = allOrders.length;
-    const convRate = totalQuotes > 0 ? ((paidOrders.length / totalQuotes) * 100).toFixed(1) : 0;
-
-    document.getElementById('stat-total-revenue').innerText = formatVND(totalRevenue);
-    document.getElementById('stat-total-quotes').innerText = totalQuotes;
-    document.getElementById('stat-conv-rate').innerText = convRate + '%';
-
-    // Revenue by Staff Chart
-    if (currentUser.role === 'manager') {
-        const staffMap = {};
-        allOrders.forEach(o => {
-            const name = o.salesperson_name || 'Không tên';
-            if (o.status === 'paid') {
-                staffMap[name] = (staffMap[name] || 0) + parseFloat(o.amount || 0);
-            }
-        });
-
-        const chartContainer = document.getElementById('staff-revenue-chart');
-        chartContainer.innerHTML = '';
-        const maxRev = Math.max(...Object.values(staffMap), 1);
-        
-        Object.entries(staffMap).forEach(([name, rev]) => {
-            const height = (rev / maxRev) * 100;
-            const bar = document.createElement('div');
-            bar.className = 'bar';
-            bar.style.height = height + '%';
-            bar.title = `${name}: ${formatVND(rev)}`;
-            bar.innerHTML = `<span class="bar-label">${name.split(' ').pop()}</span>`;
-            chartContainer.appendChild(bar);
-        });
-    }
-
-    // Top Customers
-    const custMap = {};
-    allOrders.forEach(o => {
-        const n = o.customer_name || 'Khách';
-        custMap[n] = (custMap[n] || 0) + parseFloat(o.amount || 0);
-    });
-    const topCust = Object.entries(custMap).sort((a,b) => b[1]-a[1]).slice(0, 5);
-    document.getElementById('top-customers-list').innerHTML = topCust.map(([n, v]) => `
-        <div style="display:flex; justify-content:space-between; font-size:13px; padding:8px; background:#f8fafc; border-radius:8px;">
-            <span>${n}</span>
-            <span style="font-weight:700; color:var(--primary)">${formatVND(v)}</span>
-        </div>
-    `).join('') || 'Chưa có dữ liệu';
 }
 
 function renderBoard() {
@@ -148,7 +88,6 @@ function renderBoard() {
     document.querySelectorAll('.column .cards-container').forEach(c => c.innerHTML = '');
     
     allOrders.forEach(order => {
-        // Apply filters
         if (filterStaff !== 'all' && order.salesperson_name !== filterStaff) return;
         if (search && !((order.customer_name || '').toLowerCase().includes(search) || (order.customer_phone || '').includes(search))) return;
 
@@ -168,10 +107,10 @@ function createCard(order) {
     card.innerHTML = `
         <div class="card-title">${order.customer_name || 'N/A'}</div>
         <div class="card-meta">
-            <span><i data-lucide="phone" style="width:10px;"></i> ${order.customer_phone || 'N/A'}</span>
-            <span style="font-weight:700; color:var(--primary); font-size:13px; margin-top:5px;">${formatVND(order.amount || 0)}</span>
+            <span><i data-lucide="phone" style="width:12px;"></i> ${order.customer_phone || 'N/A'}</span>
+            <span class="tag-amount">${formatVND(order.amount || 0)}</span>
         </div>
-        ${currentUser.role === 'manager' ? `<div class="card-salesperson"><i data-lucide="user" style="width:10px;"></i> ${order.salesperson_name || 'Admin'}</div>` : ''}
+        ${currentUser.role === 'manager' ? `<div class="card-salesperson">${order.salesperson_name || 'Admin'}</div>` : ''}
     `;
 
     card.onclick = () => showDetails(order);
@@ -182,13 +121,13 @@ function showDetails(order) {
     const modal = document.getElementById('detail-modal');
     document.getElementById('modal-title').innerText = `Khách hàng: ${order.customer_name}`;
     document.getElementById('modal-body').innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:12px; font-size:14px;">
+        <div style="display:flex; flex-direction:column; gap:15px; font-size:14px;">
             <p><strong>Số BG:</strong> ${order.quote_no || 'N/A'}</p>
             <p><strong>SĐT:</strong> ${order.customer_phone || 'N/A'}</p>
             <p><strong>Địa chỉ:</strong> ${order.customer_address || 'N/A'}</p>
-            <p><strong>Sản phẩm:</strong><br><small>${order.products || 'N/A'}</small></p>
+            <p><strong>Sản phẩm:</strong><br><div style="padding:10px; background:#f8fafc; border-radius:8px; white-space:pre-wrap;">${order.products || 'N/A'}</div></p>
             <p><strong>Người bán:</strong> ${order.salesperson_name || 'Admin'}</p>
-            <p style="font-size:18px; font-weight:800; color:var(--primary)">Tổng: ${formatVND(order.amount || 0)}</p>
+            <p style="font-size:20px; font-weight:800; color:var(--primary); border-top:1px solid #eee; padding-top:15px;">Tổng: ${formatVND(order.amount || 0)}</p>
         </div>
     `;
     modal.classList.add('active');
@@ -196,17 +135,26 @@ function showDetails(order) {
 
 function updateColumnStats() {
     document.querySelectorAll('.column').forEach(col => {
-        const count = col.querySelectorAll('.card').length;
+        const cards = Array.from(col.querySelectorAll('.card'));
+        const count = cards.length;
+        
+        let total = 0;
+        cards.forEach(card => {
+            const order = allOrders.find(o => o.id == card.dataset.id);
+            if (order) total += parseFloat(order.amount || 0);
+        });
+
         col.querySelector('.count').innerText = count;
+        col.querySelector('.total-amount').innerText = formatVND(total);
     });
 }
 
-// Drag & Drop
 function initSortable() {
     document.querySelectorAll('.cards-container').forEach(container => {
         new Sortable(container, {
             group: 'orders',
             animation: 200,
+            ghostClass: 'sortable-ghost',
             onEnd: async (evt) => {
                 const id = evt.item.dataset.id;
                 const newStatus = evt.to.closest('.column').dataset.status;
@@ -217,52 +165,19 @@ function initSortable() {
     });
 }
 
-// UI Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
-    lucide.createIcons();
-    checkAuth();
-    initSortable();
-
-    document.getElementById('login-btn').onclick = login;
-    document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('team_crm_user'); location.reload(); };
-
-    // Navigation
-    document.querySelectorAll('.nav-item[data-target]').forEach(item => {
-        item.onclick = () => {
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            document.querySelectorAll('.content-area').forEach(view => view.classList.remove('active'));
-            
-            item.classList.add('active');
-            document.getElementById(item.dataset.target).classList.add('active');
-            document.getElementById('view-title').innerText = item.innerText.trim();
-        };
-    });
-
-    document.getElementById('staff-filter').onchange = renderBoard;
-    document.getElementById('global-search').oninput = renderBoard;
-});
-
-// STAFF MANAGEMENT LOGIC
+// Staff Management
 async function fetchStaffList() {
     const { data, error } = await client.from('staff_users').select('*').order('created_at', { ascending: false });
     if (error) return;
-    renderStaffTable(data);
-}
-
-function renderStaffTable(staffList) {
     const tbody = document.getElementById('staff-table-body');
-    tbody.innerHTML = staffList.map(s => `
-        <tr style="border-bottom:1px solid #f1f5f9;">
-            <td style="padding:12px 20px; font-weight:600;">${s.full_name}</td>
-            <td style="padding:12px 20px; color:#64748b;">${s.username}</td>
-            <td style="padding:12px 20px; font-family:monospace;">${s.password}</td>
-            <td style="padding:12px 20px;"><span class="role-tag">${s.role.toUpperCase()}</span></td>
-            <td style="padding:12px 20px;">
-                ${s.username !== 'admin' ? `
-                    <button onclick="deleteStaff('${s.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:5px;">
-                        <i data-lucide="trash-2" style="width:16px;"></i>
-                    </button>
-                ` : '<small style="color:#94a3b8">Hệ thống</small>'}
+    tbody.innerHTML = data.map(s => `
+        <tr>
+            <td style="font-weight:600;">${s.full_name}</td>
+            <td>${s.username}</td>
+            <td>${s.password}</td>
+            <td><span style="font-size:10px; padding:2px 6px; background:#f1f5f9; border-radius:4px;">${s.role.toUpperCase()}</span></td>
+            <td>
+                ${s.username !== 'admin' ? `<button onclick="deleteStaff('${s.id}')" style="color:#ef4444; border:none; background:none; cursor:pointer;"><i data-lucide="trash-2" style="width:14px;"></i></button>` : ''}
             </td>
         </tr>
     `).join('');
@@ -270,35 +185,37 @@ function renderStaffTable(staffList) {
 }
 
 async function addNewStaff() {
-    const full_name = document.getElementById('new-staff-name').value;
-    const username = document.getElementById('new-staff-user').value;
-    const password = document.getElementById('new-staff-pass').value;
+    const name = document.getElementById('new-staff-name').value;
+    const user = document.getElementById('new-staff-user').value;
+    const pass = document.getElementById('new-staff-pass').value;
     const role = document.getElementById('new-staff-role').value;
 
-    if (!full_name || !username || !password) {
-        alert('Vui lòng điền đầy đủ thông tin!');
-        return;
-    }
-
-    const { error } = await client.from('staff_users').insert([{ full_name, username, password, role }]);
-    
-    if (error) {
-        alert('Lỗi: ' + error.message);
-    } else {
-        document.getElementById('add-staff-modal').classList.remove('active');
-        // Clear inputs
-        ['new-staff-name', 'new-staff-user', 'new-staff-pass'].forEach(id => document.getElementById(id).value = '');
-        fetchStaffList();
-        fetchStaff(); // Update filter
-    }
-}
-
-async function deleteStaff(id) {
-    if (!confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) return;
-    const { error } = await client.from('staff_users').delete().eq('id', id);
+    if (!name || !user || !pass) return alert('Điền đủ thông tin!');
+    const { error } = await client.from('staff_users').insert([{ full_name: name, username: user, password: pass, role }]);
     if (error) alert(error.message);
     else {
+        document.getElementById('add-staff-modal').classList.remove('active');
         fetchStaffList();
         fetchStaff();
     }
 }
+
+async function deleteStaff(id) {
+    if (!confirm('Xóa nhân viên này?')) return;
+    await client.from('staff_users').delete().eq('id', id);
+    fetchStaffList();
+    fetchStaff();
+}
+
+// Events
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+    initSortable();
+
+    document.getElementById('login-btn').onclick = login;
+    document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('team_crm_user'); location.reload(); };
+    document.getElementById('nav-staff-mgmt').onclick = () => document.getElementById('staff-mgmt-modal').classList.add('active');
+    
+    document.getElementById('staff-filter').onchange = renderBoard;
+    document.getElementById('global-search').oninput = renderBoard;
+});
