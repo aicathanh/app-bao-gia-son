@@ -23,6 +23,8 @@ const StaffDesktopApp = () => {
 
     const handleLogin = async () => {
         const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+        const supabaseUrl = 'https://zbnnctvggpupdnjmydcu.supabase.co';
+        const supabaseKey = 'sb_publishable__Uc7k0lfdHFzBjWT-3o36w_ydCDXOT8';
         const supabase = createClient(supabaseUrl, supabaseKey);
         
         const { data, error } = await supabase
