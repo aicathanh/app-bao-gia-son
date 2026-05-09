@@ -8,8 +8,8 @@ let allStaff = [];
 let currentMoveData = null;
 let selectedLostReason = "";
 
-const STATUS_MAP = { 'quote': 'Báo Giá', 'ordered': 'Chốt Đơn', 'paid': 'Thu Tiền', 'debt': 'Công Nợ', 'lost': 'Rớt Đơn' };
-const NEXT_STATUS = { 'quote': 'ordered', 'ordered': 'paid', 'paid': 'debt', 'debt': 'paid', 'lost': 'quote' };
+const STATUS_MAP = { 'quote': 'Báo Giá', 'ordered': 'Chốt Đơn', 'paid': 'Thu Tiền', 'debt': 'Công Nợ', 'archived': 'Lưu Trữ', 'lost': 'Rớt Đơn' };
+const NEXT_STATUS = { 'quote': 'ordered', 'ordered': 'paid', 'paid': 'debt', 'debt': 'archived', 'archived': 'quote', 'lost': 'quote' };
 
 const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
@@ -137,7 +137,7 @@ function createCard(order) {
 }
 
 async function handleMove(id, newStatus, currentStatus) {
-    if (newStatus === 'paid' || (currentStatus === 'debt' && newStatus === 'paid')) {
+    if (newStatus === 'paid' || (currentStatus === 'debt' && newStatus === 'archived')) {
         currentMoveData = { id, status: newStatus };
         document.getElementById('payment-modal').classList.add('active');
     } else if (newStatus === 'lost') {
