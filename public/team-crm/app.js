@@ -53,7 +53,9 @@ async function initApp() {
 
     if (currentUser.role === 'manager') {
         document.getElementById('staff-filter').classList.remove('hidden');
+        document.getElementById('nav-staff-mgmt').classList.remove('hidden');
         fetchStaff();
+        fetchStaffList();
     }
 
     refreshData();
@@ -239,3 +241,64 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('staff-filter').onchange = renderBoard;
     document.getElementById('global-search').oninput = renderBoard;
 });
+
+// STAFF MANAGEMENT LOGIC
+async function fetchStaffList() {
+    const { data, error } = await client.from('staff_users').select('*').order('created_at', { ascending: false });
+    if (error) return;
+    renderStaffTable(data);
+}
+
+function renderStaffTable(staffList) {
+    const tbody = document.getElementById('staff-table-body');
+    tbody.innerHTML = staffList.map(s => `
+        <tr style="border-bottom:1px solid #f1f5f9;">
+            <td style="padding:12px 20px; font-weight:600;">${s.full_name}</td>
+            <td style="padding:12px 20px; color:#64748b;">${s.username}</td>
+            <td style="padding:12px 20px; font-family:monospace;">${s.password}</td>
+            <td style="padding:12px 20px;"><span class="role-tag">${s.role.toUpperCase()}</span></td>
+            <td style="padding:12px 20px;">
+                ${s.username !== 'admin' ? `
+                    <button onclick="deleteStaff('${s.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; padding:5px;">
+                        <i data-lucide="trash-2" style="width:16px;"></i>
+                    </button>
+                ` : '<small style="color:#94a3b8">Hệ thống</small>'}
+            </td>
+        </tr>
+    `).join('');
+    lucide.createIcons();
+}
+
+async function addNewStaff() {
+    const full_name = document.getElementById('new-staff-name').value;
+    const username = document.getElementById('new-staff-user').value;
+    const password = document.getElementById('new-staff-pass').value;
+    const role = document.getElementById('new-staff-role').value;
+
+    if (!full_name || !username || !password) {
+        alert('Vui lòng điền đầy đủ thông tin!');
+        return;
+    }
+
+    const { error } = await client.from('staff_users').insert([{ full_name, username, password, role }]);
+    
+    if (error) {
+        alert('Lỗi: ' + error.message);
+    } else {
+        document.getElementById('add-staff-modal').classList.remove('active');
+        // Clear inputs
+        ['new-staff-name', 'new-staff-user', 'new-staff-pass'].forEach(id => document.getElementById(id).value = '');
+        fetchStaffList();
+        fetchStaff(); // Update filter
+    }
+}
+
+async function deleteStaff(id) {
+    if (!confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) return;
+    const { error } = await client.from('staff_users').delete().eq('id', id);
+    if (error) alert(error.message);
+    else {
+        fetchStaffList();
+        fetchStaff();
+    }
+}

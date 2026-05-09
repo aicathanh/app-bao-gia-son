@@ -136,6 +136,9 @@
             <div class="nav-item" data-target="board-view" id="nav-board">
                 <i data-lucide="kanban"></i> Pipeline Bán Hàng
             </div>
+            <div class="nav-item hidden" data-target="staff-mgmt-view" id="nav-staff-mgmt">
+                <i data-lucide="users"></i> Quản lý nhân sự
+            </div>
             <div class="nav-item" data-target="reports-view" id="nav-reports">
                 <i data-lucide="bar-chart-3"></i> Báo Cáo Doanh Số
             </div>
@@ -197,6 +200,30 @@
             </div>
         </div>
 
+        <!-- STAFF MANAGEMENT VIEW -->
+        <div id="staff-mgmt-view" class="content-area">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3>Danh sách nhân viên</h3>
+                <button onclick="document.getElementById('add-staff-modal').classList.add('active')" style="padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">+ Thêm nhân viên</button>
+            </div>
+            <div class="stat-card" style="padding:0; overflow:hidden;">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead style="background:#f8fafc; border-bottom:1px solid var(--border);">
+                        <tr>
+                            <th style="padding:15px 20px;">Họ tên</th>
+                            <th style="padding:15px 20px;">Username</th>
+                            <th style="padding:15px 20px;">Mật khẩu</th>
+                            <th style="padding:15px 20px;">Vai trò</th>
+                            <th style="padding:15px 20px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staff-table-body">
+                        <!-- Staff rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- BOARD VIEW -->
         <div id="board-view" class="content-area">
             <div class="board-container">
@@ -239,6 +266,38 @@
             <div id="modal-body"></div>
             <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
             <button onclick="document.getElementById('detail-modal').classList.remove('active')" style="width:100%; padding:12px; background:#f1f5f9; border:none; border-radius:12px; font-weight:600; cursor:pointer;">Đóng</button>
+        </div>
+    </div>
+
+    <!-- ADD STAFF MODAL -->
+    <div id="add-staff-modal" class="modal">
+        <div class="modal-content" style="max-width:400px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h3 style="margin:0">Thêm nhân viên mới</h3>
+                <span onclick="document.getElementById('add-staff-modal').classList.remove('active')" style="cursor:pointer; font-size:24px;">&times;</span>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:12px; font-weight:700; color:#64748b;">HỌ VÀ TÊN</label>
+                    <input type="text" id="new-staff-name" placeholder="Ví dụ: Nguyễn Văn A" style="padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:12px; font-weight:700; color:#64748b;">TÊN ĐĂNG NHẬP</label>
+                    <input type="text" id="new-staff-user" placeholder="Dùng để đăng nhập..." style="padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:12px; font-weight:700; color:#64748b;">MẬT KHẨU</label>
+                    <input type="text" id="new-staff-pass" placeholder="Ít nhất 4 ký tự..." style="padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:12px; font-weight:700; color:#64748b;">VAI TRÒ</label>
+                    <select id="new-staff-role" style="padding:12px; border-radius:10px; border:1px solid #e2e8f0;">
+                        <option value="sales">Nhân viên Sales</option>
+                        <option value="manager">Quản lý (Admin)</option>
+                    </select>
+                </div>
+                <button onclick="addNewStaff()" style="padding:15px; background:var(--primary); color:white; border:none; border-radius:12px; font-weight:700; cursor:pointer; margin-top:10px;">XÁC NHẬN TẠO MỚI</button>
+            </div>
         </div>
     </div>
 
