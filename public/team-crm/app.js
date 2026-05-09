@@ -56,6 +56,10 @@ async function initApp() {
         fetchStaffList();
     }
 
+    // Update payment account button text for this user
+    const personalAccountName = currentUser.full_name.split(' ').pop(); // Just the last name for brevity
+    document.querySelectorAll('.btn-account-move')[1].innerText = personalAccountName;
+
     refreshData();
     lucide.createIcons();
 }
@@ -171,7 +175,7 @@ function showDetails(order) {
                 <p style="font-size:0.75rem; font-weight:800; color:#475569; margin-bottom:8px; text-transform:uppercase;">Tài khoản nhận tiền:</p>
                 <div style="display:flex; gap:8px;">
                     <button class="acc-toggle ${order.payment_account === 'Công ty' ? 'active' : ''}" onclick="updatePaymentAccount('${order.id}', 'Công ty')">Công ty</button>
-                    <button class="acc-toggle ${order.payment_account === 'Thanh' ? 'active' : ''}" onclick="updatePaymentAccount('${order.id}', 'Thanh')">Thanh</button>
+                    <button class="acc-toggle ${order.payment_account !== 'Công ty' && order.payment_account ? 'active' : ''}" onclick="updatePaymentAccount('${order.id}', '${currentUser.full_name.split(' ').pop()}')">${currentUser.full_name.split(' ').pop()}</button>
                 </div>
             </div>
 
