@@ -1,7 +1,15 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/team-crm/:path*",
+      "destination": "/team-crm/:path*"
+    },
+    {
+      "source": "/mini-crm/:path*",
+      "destination": "/mini-crm/:path*"
+    },
+    {
+      "source": "/((?!team-crm|mini-crm).*)",
       "destination": "/index.html"
     }
   ]
