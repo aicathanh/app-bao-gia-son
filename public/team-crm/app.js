@@ -274,17 +274,53 @@ function exportToExcel() {
 }
 
 function openDashboard() {
-    const paid = allOrders.filter(o => o.status === 'paid' || o.status === 'debt');
+    const filterStaff = document.getElementById('staff-filter').value;
+    let filteredOrders = allOrders;
+    if (filterStaff !== 'all') {
+        filteredOrders = allOrders.filter(o => o.salesperson_name === filterStaff);
+    }
+
+    const paid = filteredOrders.filter(o => o.status === 'paid' || o.status === 'debt' || o.status === 'archived');
     const totalRevenue = paid.reduce((s, o) => s + parseFloat(o.amount || 0), 0);
-    const accMap = { 'Công ty': 0, 'Thanh': 0 };
-    paid.forEach(o => { if (o.payment_account) accMap[o.payment_account] += parseFloat(o.amount || 0); });
+    const accMap = { 'Công ty': 0 };
+    paid.forEach(o => { 
+        if (o.payment_account) accMap[o.payment_account] = (accMap[o.payment_account] || 0) + parseFloat(o.amount || 0); 
+    });
     
+    const title = filterStaff === 'all' ? 'Toàn bộ hệ thống' : `Nhân viên: ${filterStaff}`;
+    
+    let staffBreakdownHTML = '';
+    if (currentUser.role === 'manager' && filterStaff === 'all') {
+        const staffRevenue = {};
+        allOrders.forEach(o => {
+            if (o.status === 'paid' || o.status === 'debt' || o.status === 'archived') {
+                const name = o.salesperson_name || 'Admin';
+                staffRevenue[name] = (staffRevenue[name] || 0) + parseFloat(o.amount || 0);
+            }
+        });
+        
+        staffBreakdownHTML = `
+            <div style="margin-top:20px; padding:15px; background:#fff7ed; border-radius:12px; border:1px solid #ffedd5;">
+                <h4 style="font-size:0.75rem; margin-bottom:10px; color:#9a3412; text-transform:uppercase;">DOANH SỐ THEO NHÂN VIÊN</h4>
+                ${Object.entries(staffRevenue).sort((a,b)=>b[1]-a[1]).map(([n, v]) => `
+                    <div style="display:flex; justify-content:space-between; font-size:0.85rem; padding:8px 0; border-bottom:1px dashed #fed7aa;">
+                        <span style="font-weight:600;">${n}</span>
+                        <span style="font-weight:800; color:#c2410c;">${formatVND(v)}</span>
+                    </div>
+                `).join('') || 'Chưa có dữ liệu'}
+            </div>
+        `;
+    }
+
     document.getElementById('active-account-stats').innerHTML = `
+        <div style="margin-bottom:15px; font-weight:800; color:#2563eb; font-size:0.9rem;">${title}</div>
         <div style="display:flex; justify-content:space-around; gap:10px; background:#eff6ff; padding:15px; border-radius:16px; flex-wrap:wrap;">
-            <div style="text-align:center;"><div>TỔNG DOANH THU</div><strong style="font-size:1.2rem;">${formatVND(totalRevenue)}</strong></div>
-            <div style="text-align:center;">CÔNG TY<br><span style="color:#2563eb; font-weight:700;">${formatVND(accMap['Công ty'])}</span></div>
-            <div style="text-align:center;">THANH<br><span style="color:#059669; font-weight:700;">${formatVND(accMap['Thanh'])}</span></div>
+            <div style="text-align:center; min-width:140px;"><div>TỔNG DOANH THU</div><strong style="font-size:1.2rem;">${formatVND(totalRevenue)}</strong></div>
+            ${Object.entries(accMap).map(([acc, val]) => `
+                <div style="text-align:center;">${acc.toUpperCase()}<br><span style="color:#2563eb; font-weight:700;">${formatVND(val)}</span></div>
+            `).join('')}
         </div>
+        ${staffBreakdownHTML}
     `;
 
     const cMap = {}; paid.forEach(o => { const n = o.customer_name || 'Khách'; cMap[n] = (cMap[n] || 0) + parseFloat(o.amount || 0); });
