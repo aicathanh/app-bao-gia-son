@@ -142,3 +142,13 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-app); color:
 
 .stat-val { font-weight: 800; color: var(--primary-color); }
 
+.dashboard-stat-btn {
+    user-select: none;
+    border: 1px solid transparent;
+}
+.dashboard-stat-btn:hover {
+    background: rgba(0, 0, 0, 0.06) !important;
+}
+.dashboard-stat-btn:active {
+    transform: scale(0.95);
+}
