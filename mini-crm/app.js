@@ -9,6 +9,10 @@ let currentMoveData = null;
 let selectedLostReason = "";
 const THE_PASSWORD = "6688";
 
+let cachedDashboardOrders = [];
+let currentActiveDetailType = null;
+let currentArchivedDetailType = null;
+
 const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
 async function fetchOrders() {
@@ -207,6 +211,8 @@ function exportToExcel() {
 
 async function openDashboard() {
     const orders = await fetchOrders();
+    cachedDashboardOrders = orders;
+
     const yFilter = document.getElementById('year-filter');
     const currentYear = new Date().getFullYear();
     const years = new Set([currentYear]); orders.forEach(o => years.add(new Date(o.created_at).getFullYear()));
@@ -220,10 +226,22 @@ async function openDashboard() {
     
     document.getElementById('active-account-stats').innerHTML = `
         <div style="display:flex; justify-content:space-around; gap:10px; margin-bottom:20px; background:#eff6ff; padding:15px; border-radius:12px; flex-wrap:wrap;">
-            <div style="text-align:center; min-width:120px;"><div>TỔNG DOANH SỐ</div><strong>${formatVND(activeData.totalRevenue)}</strong></div>
-            <div style="text-align:center;">CÔNG TY<br><span style="color:#2563eb; font-weight:700;">${formatVND(activeData.accountMap['Công ty'])}</span></div>
-            <div style="text-align:center;">THANH<br><span style="color:#059669; font-weight:700;">${formatVND(activeData.accountMap['Thanh'])}</span></div>
-            <div style="text-align:center; color:red;">ĐANG NỢ<br><strong>${formatVND(activeDebt)}</strong></div>
+            <div style="text-align:center; min-width:120px; padding: 5px 10px;">
+                <div>TỔNG DOANH SỐ</div>
+                <strong>${formatVND(activeData.totalRevenue)}</strong>
+            </div>
+            <div id="stat-active-company" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
+                CÔNG TY<br>
+                <span style="color:#2563eb; font-weight:700;">${formatVND(activeData.accountMap['Công ty'])}</span>
+            </div>
+            <div id="stat-active-thanh" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
+                THANH<br>
+                <span style="color:#059669; font-weight:700;">${formatVND(activeData.accountMap['Thanh'])}</span>
+            </div>
+            <div id="stat-active-debt" style="text-align:center; color:red; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
+                ĐANG NỢ<br>
+                <strong>${formatVND(activeDebt)}</strong>
+            </div>
         </div>
     `;
 
@@ -231,17 +249,284 @@ async function openDashboard() {
     const archData = calculateStats(archived);
     document.getElementById('archived-account-stats').innerHTML = `
         <div style="display:flex; justify-content:space-around; gap:10px; margin-bottom:20px; background:#f5f3ff; padding:15px; border-radius:12px; flex-wrap:wrap;">
-            <div style="text-align:center; min-width:120px;"><div>TỔNG LỊCH SỬ</div><strong>${formatVND(archData.totalRevenue)}</strong></div>
-            <div style="text-align:center;">CÔNG TY<br><strong>${formatVND(archData.accountMap['Công ty'])}</strong></div>
-            <div style="text-align:center;">THANH<br><strong>${formatVND(archData.accountMap['Thanh'])}</strong></div>
+            <div style="text-align:center; min-width:120px; padding: 5px 10px;">
+                <div>TỔNG LỊCH SỬ</div>
+                <strong>${formatVND(archData.totalRevenue)}</strong>
+            </div>
+            <div id="stat-archived-company" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
+                CÔNG TY<br>
+                <strong style="color:#2563eb;">${formatVND(archData.accountMap['Công ty'])}</strong>
+            </div>
+            <div id="stat-archived-thanh" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
+                THANH<br>
+                <strong style="color:#059669;">${formatVND(archData.accountMap['Thanh'])}</strong>
+            </div>
         </div>
     `;
+
+    // Bind click events
+    const cActive = document.getElementById('stat-active-company');
+    if (cActive) cActive.onclick = () => showActiveDetails('company');
+    const tActive = document.getElementById('stat-active-thanh');
+    if (tActive) tActive.onclick = () => showActiveDetails('thanh');
+    const dActive = document.getElementById('stat-active-debt');
+    if (dActive) dActive.onclick = () => showActiveDetails('debt');
+
+    const cArchived = document.getElementById('stat-archived-company');
+    if (cArchived) cArchived.onclick = () => showArchivedDetails('company');
+    const tArchived = document.getElementById('stat-archived-thanh');
+    if (tArchived) tArchived.onclick = () => showArchivedDetails('thanh');
+
+    // Refresh details if already open
+    if (currentActiveDetailType) {
+        const type = currentActiveDetailType;
+        currentActiveDetailType = null;
+        showActiveDetails(type);
+    } else {
+        const activeContainer = document.getElementById('active-details-container');
+        if (activeContainer) activeContainer.style.display = 'none';
+    }
+
+    if (currentArchivedDetailType) {
+        const type = currentArchivedDetailType;
+        currentArchivedDetailType = null;
+        showArchivedDetails(type);
+    } else {
+        const archivedContainer = document.getElementById('archived-details-container');
+        if (archivedContainer) archivedContainer.style.display = 'none';
+    }
 
     renderStatList('active-top-customers', activeData.topCustomers);
     renderStatList('active-top-products', activeData.topProducts);
     renderStatList('archived-top-customers', archData.topCustomers);
     renderStatList('archived-top-products', archData.topProducts);
     document.getElementById('dashboard-modal').classList.add('active');
+}
+
+function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('active');
+    if (modal.id === 'dashboard-modal') {
+        currentActiveDetailType = null;
+        currentArchivedDetailType = null;
+        const activeContainer = document.getElementById('active-details-container');
+        if (activeContainer) activeContainer.style.display = 'none';
+        const archivedContainer = document.getElementById('archived-details-container');
+        if (archivedContainer) archivedContainer.style.display = 'none';
+    }
+}
+
+function showActiveDetails(type) {
+    const container = document.getElementById('active-details-container');
+    if (!container) return;
+    
+    if (currentActiveDetailType === type) {
+        container.style.display = 'none';
+        currentActiveDetailType = null;
+        updateActiveStatHighlights();
+        return;
+    }
+    
+    currentActiveDetailType = type;
+    updateActiveStatHighlights();
+    
+    const active = cachedDashboardOrders.filter(o => o.status === 'paid' || o.status === 'debt');
+    let filtered = [];
+    let title = '';
+    let accentColor = '#2563eb';
+    
+    if (type === 'company') {
+        filtered = active.filter(o => o.payment_account === 'Công ty');
+        title = 'Chi tiết Doanh số Công ty (Đang chạy)';
+        accentColor = '#2563eb';
+    } else if (type === 'thanh') {
+        filtered = active.filter(o => o.payment_account === 'Thanh');
+        title = 'Chi tiết Doanh số Thanh (Đang chạy)';
+        accentColor = '#059669';
+    } else if (type === 'debt') {
+        filtered = active.filter(o => o.status === 'debt');
+        title = 'Chi tiết Khách hàng Đang Nợ';
+        accentColor = '#dc2626';
+    }
+    
+    renderDetailsTable(container, title, filtered, accentColor);
+}
+
+function showArchivedDetails(type) {
+    const container = document.getElementById('archived-details-container');
+    if (!container) return;
+    
+    if (currentArchivedDetailType === type) {
+        container.style.display = 'none';
+        currentArchivedDetailType = null;
+        updateArchivedStatHighlights();
+        return;
+    }
+    
+    currentArchivedDetailType = type;
+    updateArchivedStatHighlights();
+    
+    const yFilter = document.getElementById('year-filter');
+    const month = document.getElementById('month-filter').value;
+    const year = yFilter ? yFilter.value : new Date().getFullYear().toString();
+    
+    const archived = cachedDashboardOrders.filter(o => { 
+        const d = new Date(o.created_at); 
+        return o.status === 'archived' && d.getFullYear().toString() === year && (month === 'all' ? true : d.getMonth().toString() === month); 
+    });
+    
+    let filtered = [];
+    let title = '';
+    let accentColor = '#2563eb';
+    
+    if (type === 'company') {
+        filtered = archived.filter(o => o.payment_account === 'Công ty');
+        title = `Chi tiết Doanh số Công ty - Lịch sử (Năm ${year} - ${month === 'all' ? 'Tất cả tháng' : 'Tháng ' + (parseInt(month)+1)})`;
+        accentColor = '#2563eb';
+    } else if (type === 'thanh') {
+        filtered = archived.filter(o => o.payment_account === 'Thanh');
+        title = `Chi tiết Doanh số Thanh - Lịch sử (Năm ${year} - ${month === 'all' ? 'Tất cả tháng' : 'Tháng ' + (parseInt(month)+1)})`;
+        accentColor = '#059669';
+    }
+    
+    renderDetailsTable(container, title, filtered, accentColor);
+}
+
+function renderDetailsTable(container, title, orders, accentColor) {
+    if (!container) return;
+    container.style.display = 'block';
+    
+    const totalAmount = orders.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0);
+    
+    let tableRows = '';
+    if (orders.length === 0) {
+        tableRows = `<tr><td colspan="5" style="text-align:center; color:#64748b; padding: 20px;">Không có dữ liệu</td></tr>`;
+    } else {
+        tableRows = orders.map(o => {
+            const dateStr = new Date(o.created_at).toLocaleDateString('vi-VN');
+            const statusLabel = STATUS_MAP[o.status] || o.status;
+            
+            let contactHtml = 'N/A';
+            if (o.customer_phone) {
+                const cleanPhone = o.customer_phone.replace(/[^0-9]/g, '');
+                contactHtml = `
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <a href="tel:${o.customer_phone}" style="color:#2563eb; font-weight:600; text-decoration:none; white-space:nowrap;">${o.customer_phone}</a>
+                        <a href="https://zalo.me/${cleanPhone}" target="_blank" style="padding:2px 8px; background:#0068ff; color:white; border-radius:6px; font-size:0.65rem; text-decoration:none; font-weight:700; display:inline-block; white-space:nowrap;">Zalo</a>
+                    </div>
+                `;
+            }
+            
+            return `
+                <tr>
+                    <td style="white-space:nowrap;">${dateStr}</td>
+                    <td>
+                        <a href="#" class="detail-link" data-id="${o.id}" style="color:#1e293b; font-weight:700; text-decoration:underline;">${o.customer_name || 'N/A'}</a>
+                    </td>
+                    <td>${contactHtml}</td>
+                    <td style="font-weight:700; color:${o.status === 'debt' ? 'red' : 'inherit'};">${formatVND(o.amount || 0)}</td>
+                    <td style="white-space:nowrap;">
+                        <span class="status-badge" style="padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700; background:${o.status === 'debt' ? '#fee2e2' : o.status === 'archived' ? '#f1f5f9' : '#dcfce7'}; color:${o.status === 'debt' ? '#b91c1c' : o.status === 'archived' ? '#475569' : '#15803d'};">
+                            ${statusLabel}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+    
+    container.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid ${accentColor}; flex-wrap:wrap; gap:10px;">
+            <h4 style="color:${accentColor}; margin:0; font-size:0.95rem; font-weight:800;">${title}</h4>
+            <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                <span style="font-size:0.85rem; font-weight:700; background:#f1f5f9; padding:4px 10px; border-radius:6px;">
+                    Tổng cộng: <span style="color:${accentColor}; font-weight:800;">${formatVND(totalAmount)}</span> (${orders.length} đơn)
+                </span>
+                <button class="close-details-btn" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.8rem; font-weight:700; display:flex; align-items:center; gap:4px; padding:4px;">
+                    <i data-lucide="x" style="width:14px; height:14px;"></i> Đóng
+                </button>
+            </div>
+        </div>
+        <div style="max-height: 250px; overflow-y: auto; border:1px solid #f1f5f9; border-radius:8px;">
+            <table class="data-table" style="font-size:0.85rem; width:100%; margin-top:0;">
+                <thead>
+                    <tr>
+                        <th style="font-size:0.7rem; padding:8px 12px;">Ngày</th>
+                        <th style="font-size:0.7rem; padding:8px 12px;">Họ tên</th>
+                        <th style="font-size:0.7rem; padding:8px 12px;">Liên hệ</th>
+                        <th style="font-size:0.7rem; padding:8px 12px;">Số tiền</th>
+                        <th style="font-size:0.7rem; padding:8px 12px;">Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.querySelector('.close-details-btn').onclick = () => {
+        container.style.display = 'none';
+        if (container.id === 'active-details-container') {
+            currentActiveDetailType = null;
+            updateActiveStatHighlights();
+        } else {
+            currentArchivedDetailType = null;
+            updateArchivedStatHighlights();
+        }
+    };
+    
+    container.querySelectorAll('.detail-link').forEach(link => {
+        link.onclick = (e) => {
+            e.preventDefault();
+            const orderId = link.dataset.id;
+            const order = cachedDashboardOrders.find(o => o.id == orderId);
+            if (order) {
+                showDetails(order);
+            }
+        };
+    });
+    
+    lucide.createIcons();
+}
+
+function updateActiveStatHighlights() {
+    const ids = {
+        'company': 'stat-active-company',
+        'thanh': 'stat-active-thanh',
+        'debt': 'stat-active-debt'
+    };
+    
+    Object.entries(ids).forEach(([type, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (currentActiveDetailType === type) {
+            el.style.background = 'rgba(0, 0, 0, 0.08)';
+            el.style.boxShadow = 'inset 0 0 0 2px rgba(37, 99, 235, 0.2)';
+        } else {
+            el.style.background = 'transparent';
+            el.style.boxShadow = 'none';
+        }
+    });
+}
+
+function updateArchivedStatHighlights() {
+    const ids = {
+        'company': 'stat-archived-company',
+        'thanh': 'stat-archived-thanh'
+    };
+    
+    Object.entries(ids).forEach(([type, id]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (currentArchivedDetailType === type) {
+            el.style.background = 'rgba(0, 0, 0, 0.08)';
+            el.style.boxShadow = 'inset 0 0 0 2px rgba(37, 99, 235, 0.2)';
+        } else {
+            el.style.background = 'transparent';
+            el.style.boxShadow = 'none';
+        }
+    });
 }
 
 function calculateStats(orders) {
@@ -357,10 +642,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.modal-close-trigger').forEach(b => {
         b.onclick = () => {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            const modal = b.closest('.modal');
+            closeModal(modal);
             if (currentMoveData && (currentMoveData.status === 'lost' || currentMoveData.status === 'archived')) renderBoard();
         };
     });
 
-    window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
+    window.onclick = (e) => { 
+        if (e.target.classList.contains('modal')) {
+            closeModal(e.target);
+        }
+    };
 });
