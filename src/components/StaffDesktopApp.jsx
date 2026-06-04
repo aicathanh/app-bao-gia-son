@@ -67,6 +67,7 @@ const StaffDesktopApp = () => {
         if (saved) return saved;
         return `- Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng\n- Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng`;
     });
+    const [paymentMethod, setPaymentMethod] = useState('company');
 
     // Auto-save notes and profile
     useEffect(() => {
@@ -128,6 +129,16 @@ const StaffDesktopApp = () => {
     const subtotal = items.reduce((sum, item) => sum + (getPrice(item) * item.quantity), 0);
     const grandTotal = subtotal + (shipping.visible ? shipping.value : 0) - (discount.visible ? discount.value : 0);
     const formatCurrency = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+
+    const getQRUrl = () => {
+        const desc = `Thanh toan bao gia ${customer.quoteId || ''}`;
+        if (paymentMethod === 'company') {
+            return `https://img.vietqr.io/image/eximbank-211014851223910-compact2.png?amount=${grandTotal}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent('CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG')}`;
+        } else if (paymentMethod === 'personal') {
+            return `https://img.vietqr.io/image/acb-862999888-compact2.png?amount=${grandTotal}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent('Nguyễn Xuân Thanh')}`;
+        }
+        return '';
+    };
 
     const handleDownload = async () => {
         const btn = document.getElementById('dl-btn');
@@ -400,7 +411,81 @@ const StaffDesktopApp = () => {
                     <span className="total-value">{formatCurrency(grandTotal)}</span>
                 </div>
 
-                <div className="footer-section">
+                <div className="qr-selector-container no-print" style={{ 
+                    marginTop: '25px',
+                    marginBottom: '15px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '15px',
+                    background: '#f8fafc',
+                    padding: '12px 20px',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0'
+                }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '13px', color: '#475569' }}>TÀI KHOẢN THANH TOÁN (QR CODE):</span>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button 
+                            type="button" 
+                            onClick={() => setPaymentMethod('company')}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #2563eb',
+                                background: paymentMethod === 'company' ? '#2563eb' : 'white',
+                                color: paymentMethod === 'company' ? 'white' : '#2563eb',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: paymentMethod === 'company' ? '0 2px 4px rgba(37, 99, 235, 0.2)' : 'none'
+                            }}
+                        >
+                            Công Ty (Eximbank)
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => setPaymentMethod('personal')}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #059669',
+                                background: paymentMethod === 'personal' ? '#059669' : 'white',
+                                color: paymentMethod === 'personal' ? 'white' : '#059669',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: paymentMethod === 'personal' ? '0 2px 4px rgba(5, 150, 105, 0.2)' : 'none'
+                            }}
+                        >
+                            Cá Nhân (ACB)
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => setPaymentMethod('hidden')}
+                            style={{
+                                padding: '8px 16px',
+                                borderRadius: '8px',
+                                border: '1px solid #64748b',
+                                background: paymentMethod === 'hidden' ? '#64748b' : 'white',
+                                color: paymentMethod === 'hidden' ? 'white' : '#64748b',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            Ẩn QR Code
+                        </button>
+                    </div>
+                </div>
+
+                <div className="footer-section" style={{
+                    display: 'grid',
+                    gridTemplateColumns: paymentMethod !== 'hidden' ? '1.8fr 1.2fr 1fr' : '1.8fr 1fr',
+                    gap: '40px',
+                    marginTop: '10px'
+                }}>
                      <div className="notes-container">
                         <div className="notes-title">Ghi chú:</div>
                         <textarea 
@@ -426,6 +511,45 @@ const StaffDesktopApp = () => {
                             {staff.bankInfo && `\n\nTHÔNG TIN THANH TOÁN:\n${staff.bankInfo}`}
                         </div>
                     </div>
+
+                    {paymentMethod !== 'hidden' && (
+                        <div className="qr-code-section" style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            padding: '10px',
+                            background: '#f8fafc',
+                            textAlign: 'center',
+                            alignSelf: 'start'
+                        }}>
+                            <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#475569', marginBottom: '6px', letterSpacing: '0.5px' }}>
+                                QUÉT MÃ QR THANH TOÁN
+                            </div>
+                            <img 
+                                src={getQRUrl()} 
+                                alt="QR Code" 
+                                style={{ 
+                                    width: '115px', 
+                                    height: '115px', 
+                                    objectFit: 'contain',
+                                    mixBlendMode: 'multiply'
+                                }} 
+                            />
+                            <div style={{ fontSize: '9px', color: '#475569', marginTop: '6px', lineHeight: '1.3', fontWeight: '500' }}>
+                                <strong style={{ color: paymentMethod === 'company' ? '#2563eb' : '#059669' }}>
+                                    {paymentMethod === 'company' ? 'EXIMBANK' : 'ACB'}
+                                </strong><br />
+                                STK: {paymentMethod === 'company' ? '211014851223910' : '862999888'}<br />
+                                <span style={{ fontSize: '8px', color: '#64748b' }}>
+                                    {paymentMethod === 'company' ? 'CÔNG TY TNHH SX TM DV BÍCH TRANG' : 'NGUYỄN XUÂN THANH'}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="signature-area">
                         <div className="sig-title">Đại Diện Kinh Doanh</div>
                         <div className="sig-name" style={{ textTransform: 'uppercase' }}>{staff.fullName || 'CHƯA CẬP NHẬT'}</div>
