@@ -64,8 +64,60 @@
         </div>
     </div>
 
-    <div id="customer-modal" class="modal" style="z-index: 20000;"><div class="modal-content" style="max-width: 900px; width: 95%;"><header><h3><i data-lucide="users"></i> Danh sách khách hàng</h3><div style="display:flex; gap:10px;"><button id="export-btn" class="btn-icon" style="background:#166534; color:white;"><i data-lucide="download"></i> Xuất Excel</button><button class="modal-close-trigger"><i data-lucide="x"></i></button></div></header><div style="max-height:70vh; overflow-y:auto; margin-top:20px;"><table class="data-table"><thead><tr><th>Họ tên</th><th>SĐT</th><th>Địa chỉ</th><th>Tổng mua</th><th>Đơn</th></tr></thead><tbody id="customer-table-body"></tbody></table></div></div></div>
-    <div id="detail-modal" class="modal" style="z-index: 20000;"><div class="modal-content"><header><h3 id="modal-title">Chi tiết</h3><button class="modal-close-trigger"><i data-lucide="x"></i></button></header><div id="modal-body"></div></div></div>
+    <div id="customer-modal" class="modal" style="z-index: 20000;">
+        <div class="modal-content" style="max-width: 900px; width: 95%;">
+            <header>
+                <h3><i data-lucide="users"></i> Danh sách khách hàng</h3>
+                <div style="display:flex; gap:10px;">
+                    <button id="export-btn" class="btn-icon" style="background:#166534; color:white;"><i data-lucide="download"></i> Xuất Excel</button>
+                    <button class="modal-close-trigger"><i data-lucide="x"></i></button>
+                </div>
+            </header>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; gap:10px; background: #f8fafc; padding: 10px 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <div style="position:relative; flex: 1; max-width: 300px;">
+                    <input type="text" id="customer-modal-search" placeholder="Tìm tên hoặc SĐT khách hàng..." style="width:100%; padding:8px 12px 8px 32px; border:1px solid #cbd5e0; border-radius:8px; font-size:0.85rem; outline:none; background: white;">
+                    <i data-lucide="search" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:#64748b;"></i>
+                </div>
+                <div style="font-size:0.8rem; color:#64748b; font-weight: 600;" id="customer-modal-count">Tổng số khách hàng: 0</div>
+            </div>
+            <div style="max-height:60vh; overflow-y:auto; margin-top:15px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Họ tên</th>
+                            <th>SĐT</th>
+                            <th>Địa chỉ</th>
+                            <th>Tổng mua</th>
+                            <th>Đơn</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div id="customer-history-modal" class="modal" style="z-index: 21000;">
+        <div class="modal-content" style="max-width: 850px; width: 95%;">
+            <header>
+                <h3 id="history-modal-title">Lịch sử khách hàng</h3>
+                <button class="modal-close-trigger"><i data-lucide="x"></i></button>
+            </header>
+            <div id="history-modal-body" style="margin-top:20px; max-height:70vh; overflow-y:auto;">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="modal" style="z-index: 20000;">
+        <div class="modal-content">
+            <header>
+                <h3 id="modal-title">Chi tiết</h3>
+                <button class="modal-close-trigger"><i data-lucide="x"></i></button>
+            </header>
+            <div id="modal-body"></div>
+        </div>
+    </div>
     <div id="payment-modal" class="modal" style="z-index: 20000;"><div class="modal-content" style="max-width: 400px; text-align: center;"><header><h3>Tài khoản nhận tiền</h3></header><div style="padding: 20px 0; display: flex; flex-direction: column; gap: 12px;"><button class="btn-account cty" data-account="Công ty"><i data-lucide="building-2"></i> Công ty</button><button class="btn-account thanh" data-account="Thanh"><i data-lucide="user"></i> Thanh</button></div><button class="modal-close-trigger" style="margin-top: 10px; background: none; border: none; color: #64748b; cursor: pointer;">Bỏ qua</button></div></div>
     <div id="dashboard-modal" class="modal" style="z-index: 20000;">
         <div class="modal-content" style="max-width: 1000px; width: 95%; max-height: 90vh; overflow-y: auto;">

@@ -95,7 +95,11 @@ function showDetails(order) {
                 <span>Số BG: <strong>${order.quote_no || 'N/A'}</strong></span>
                 <span>Ngày: <strong>${new Date(order.created_at).toLocaleDateString('vi-VN')}</strong></span>
             </div>
-            <p><strong>Khách hàng:</strong> ${order.customer_name}</p>
+            <p><strong>Khách hàng:</strong> ${order.customer_name}
+                <a href="#" class="view-history-link" data-name="${order.customer_name}" data-phone="${order.customer_phone || ''}" style="color:#2563eb; font-weight:700; margin-left:12px; text-decoration:underline; font-size:0.8rem; display:inline-flex; align-items:center; gap:4px;">
+                    <i data-lucide="history" style="width:12px; height:12px;"></i> Xem lịch sử mua hàng
+                </a>
+            </p>
             <p><strong>SĐT:</strong> 
                 <a href="tel:${order.customer_phone}" style="color:#2563eb; font-weight:700;">${order.customer_phone || 'N/A'}</a>
                 <a href="https://zalo.me/${order.customer_phone ? order.customer_phone.replace(/[^0-9]/g, '') : ''}" target="_blank" style="margin-left:8px; padding:3px 10px; background:#0068ff; color:white; border-radius:8px; font-size:0.7rem; text-decoration:none; font-weight:800; display:inline-flex; align-items:center;">Zalo</a>
@@ -119,6 +123,16 @@ function showDetails(order) {
         </div>
     `;
     document.querySelector('.save-notes-btn').onclick = () => updateNotes(order.id, document.getElementById('order-notes').value);
+    
+    const viewHistoryLink = modal.querySelector('.view-history-link');
+    if (viewHistoryLink) {
+        viewHistoryLink.onclick = (e) => {
+            e.preventDefault();
+            closeModal(modal);
+            showCustomerHistory(viewHistoryLink.dataset.name, viewHistoryLink.dataset.phone);
+        };
+    }
+
     modal.classList.add('active');
     lucide.createIcons();
 }
@@ -172,12 +186,161 @@ async function openCustomerList() {
         if (o.status !== 'lost' && o.status !== 'quote') customers[key].total += parseFloat(o.amount || 0);
         customers[key].count += 1;
     });
-    const tbody = document.getElementById('customer-table-body');
-    tbody.innerHTML = Object.values(customers).sort((a,b) => b.total - a.total).map(c => `
-        <tr><td style="font-weight:700;">${c.name}</td><td>${c.phone || 'N/A'}</td><td style="font-size:0.75rem;">${c.address || 'N/A'}</td><td style="font-weight:800; color:#166534;">${formatVND(c.total)}</td><td style="text-align:center;">${c.count}</td></tr>
-    `).join('');
+
+    const searchInput = document.getElementById('customer-modal-search');
+    if (searchInput) searchInput.value = '';
+
+    window.allCustomers = Object.values(customers).sort((a,b) => b.total - a.total);
+    renderFilteredCustomerList(window.allCustomers);
+
     document.getElementById('customer-modal').classList.add('active');
     document.getElementById('export-btn').onclick = exportToExcel;
+}
+
+function renderFilteredCustomerList(customerArray) {
+    const tbody = document.getElementById('customer-table-body');
+    tbody.innerHTML = customerArray.map(c => `
+        <tr class="customer-row" data-name="${c.name}" data-phone="${c.phone || ''}" style="cursor:pointer;">
+            <td style="font-weight:700; color:#2563eb; text-decoration:underline;">${c.name}</td>
+            <td>${c.phone || 'N/A'}</td>
+            <td style="font-size:0.75rem;">${c.address || 'N/A'}</td>
+            <td style="font-weight:800; color:#166534;">${formatVND(c.total)}</td>
+            <td style="text-align:center;">
+                <span style="background:#eff6ff; padding:2px 8px; border-radius:12px; font-weight:700; color:#2563eb; font-size:0.8rem;">
+                    ${c.count} đơn
+                </span>
+            </td>
+        </tr>
+    `).join('');
+
+    tbody.querySelectorAll('.customer-row').forEach(row => {
+        row.onclick = () => {
+            showCustomerHistory(row.dataset.name, row.dataset.phone);
+        };
+    });
+
+    const countEl = document.getElementById('customer-modal-count');
+    if (countEl) {
+        countEl.innerText = `Tìm thấy: ${customerArray.length} khách hàng`;
+    }
+}
+
+async function showCustomerHistory(name, phone) {
+    const orders = await fetchOrders();
+    const filtered = orders.filter(o => {
+        const matchName = (o.customer_name || '').toLowerCase() === name.toLowerCase();
+        const matchPhone = phone && o.customer_phone && o.customer_phone.replace(/[^0-9]/g, '') === phone.replace(/[^0-9]/g, '');
+        return matchName || matchPhone;
+    });
+
+    if (filtered.length === 0) {
+        alert('Không tìm thấy dữ liệu đơn hàng cho khách hàng này.');
+        return;
+    }
+
+    const customerName = filtered[0].customer_name;
+    const customerPhone = filtered[0].customer_phone || 'N/A';
+    const customerAddress = filtered[0].customer_address || 'N/A';
+
+    const totalOrders = filtered.length;
+    const debtOrders = filtered.filter(o => o.status === 'debt');
+    const totalSpent = filtered.filter(o => o.status !== 'lost' && o.status !== 'quote').reduce((sum, o) => sum + parseFloat(o.amount || 0), 0);
+    const totalDebt = debtOrders.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0);
+
+    const modal = document.getElementById('customer-history-modal');
+    document.getElementById('history-modal-title').innerHTML = `<i data-lucide="history" style="display:inline-block; vertical-align:middle; margin-right:8px;"></i>Lịch sử mua hàng: ${customerName}`;
+
+    let historyHtml = `
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:15px; margin-bottom:20px; font-size:0.9rem;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                <p style="margin:0;"><strong>Số điện thoại:</strong> ${customerPhone}</p>
+                <p style="margin:0;"><strong>Địa chỉ:</strong> ${customerAddress}</p>
+            </div>
+            <div style="display:flex; justify-content:space-between; gap:10px; background:white; padding:12px; border-radius:8px; border:1px solid #f1f5f9; flex-wrap:wrap; text-align:center;">
+                <div style="flex:1; min-width:80px;">
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">TỔNG SỐ ĐƠN</div>
+                    <strong style="font-size:1.1rem; color:#1e293b;">${totalOrders}</strong>
+                </div>
+                <div style="flex:1; min-width:100px; border-left:1px solid #f1f5f9;">
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">ĐÃ THANH TOÁN</div>
+                    <strong style="font-size:1.1rem; color:#166534;">${formatVND(totalSpent - totalDebt)}</strong>
+                </div>
+                <div style="flex:1; min-width:100px; border-left:1px solid #f1f5f9;">
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">ĐANG NỢ TÀI CHÍNH</div>
+                    <strong style="font-size:1.1rem; color:#dc2626;">${formatVND(totalDebt)}</strong>
+                </div>
+                <div style="flex:1; min-width:100px; border-left:1px solid #f1f5f9;">
+                    <div style="font-size:0.75rem; color:#64748b; font-weight:700;">TỔNG MUA (CHỐT)</div>
+                    <strong style="font-size:1.1rem; color:#2563eb;">${formatVND(totalSpent)}</strong>
+                </div>
+            </div>
+        </div>
+
+        <table class="data-table" style="width:100%; font-size:0.85rem;">
+            <thead>
+                <tr>
+                    <th style="padding:10px 8px; font-size:0.75rem;">Ngày đặt</th>
+                    <th style="padding:10px 8px; font-size:0.75rem;">Mã đơn</th>
+                    <th style="padding:10px 8px; font-size:0.75rem;">Sản phẩm</th>
+                    <th style="padding:10px 8px; font-size:0.75rem;">Số tiền</th>
+                    <th style="padding:10px 8px; font-size:0.75rem;">Trạng thái</th>
+                    <th style="padding:10px 8px; font-size:0.75rem; text-align:center;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    historyHtml += filtered.map(o => {
+        const dateStr = new Date(o.created_at).toLocaleDateString('vi-VN');
+        const statusLabel = STATUS_MAP[o.status] || o.status;
+        
+        let statusBadgeColor = '#f1f5f9';
+        let statusTextColor = '#475569';
+        if (o.status === 'debt') { statusBadgeColor = '#fee2e2'; statusTextColor = '#b91c1c'; }
+        else if (o.status === 'paid') { statusBadgeColor = '#dcfce7'; statusTextColor = '#15803d'; }
+        else if (o.status === 'ordered') { statusBadgeColor = '#eff6ff'; statusTextColor = '#1d4ed8'; }
+        else if (o.status === 'lost') { statusBadgeColor = '#fef2f2'; statusTextColor = '#991b1b'; }
+        else if (o.status === 'quote') { statusBadgeColor = '#fef3c7'; statusTextColor = '#d97706'; }
+
+        return `
+            <tr>
+                <td style="white-space:nowrap; padding:10px 8px;">${dateStr}</td>
+                <td style="font-weight:600; padding:10px 8px;">${o.quote_no || 'N/A'}</td>
+                <td style="line-height:1.4; color:#475569; max-width:250px; font-size:0.75rem; padding:10px 8px;">
+                    ${o.products ? o.products.split(', ').join('<br>') : 'N/A'}
+                </td>
+                <td style="font-weight:700; color:${o.status === 'debt' ? 'red' : '#1e293b'}; padding:10px 8px;">${formatVND(o.amount || 0)}</td>
+                <td style="white-space:nowrap; padding:10px 8px;">
+                    <span style="padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:700; background:${statusBadgeColor}; color:${statusTextColor};">
+                        ${statusLabel}
+                    </span>
+                </td>
+                <td style="text-align:center; padding:10px 8px;">
+                    <button class="view-single-order-btn action-btn" data-id="${o.id}" style="padding:4px 8px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; border-radius:6px; font-size:0.75rem; font-weight:600; cursor:pointer; width:auto; height:auto;">Chi tiết</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    historyHtml += `
+            </tbody>
+        </table>
+    `;
+
+    document.getElementById('history-modal-body').innerHTML = historyHtml;
+
+    modal.querySelectorAll('.view-single-order-btn').forEach(btn => {
+        btn.onclick = () => {
+            const orderId = btn.dataset.id;
+            const order = filtered.find(o => o.id == orderId);
+            if (order) {
+                showDetails(order);
+            }
+        };
+    });
+
+    modal.classList.add('active');
+    lucide.createIcons();
 }
 
 function exportToExcel() {
@@ -321,6 +484,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('search-input').oninput = applySearch;
     document.getElementById('month-filter').onchange = openDashboard;
     document.getElementById('year-filter').onchange = openDashboard;
+    
+    document.getElementById('customer-modal-search').oninput = (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = (window.allCustomers || []).filter(c => 
+            c.name.toLowerCase().includes(query) || (c.phone && c.phone.toLowerCase().includes(query))
+        );
+        renderFilteredCustomerList(filtered);
+    };
     
     document.querySelectorAll('.btn-account').forEach(btn => {
         btn.onclick = () => {

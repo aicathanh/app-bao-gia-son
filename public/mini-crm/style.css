@@ -707,4 +707,8 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-app); color:
     color: #2563eb;
 }
 
+.customer-row:hover {
+    background-color: #f1f5f9 !important;
+}
+
 
