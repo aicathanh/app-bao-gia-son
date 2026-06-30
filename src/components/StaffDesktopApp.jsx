@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 const StaffDesktopApp = () => {
     const defaultItem = { productId: '', size: '5', quantity: 1, note: '', customName: '', customPrice: 0 };
     const products = productData.products;
+    const [docType, setDocType] = useState('quote');
 
     // Staff state
     const [staff, setStaff] = useState(() => {
@@ -207,6 +208,7 @@ const StaffDesktopApp = () => {
     const subtotal = items.reduce((sum, item) => sum + (getPrice(item) * item.quantity), 0);
     const grandTotal = subtotal + (shipping.visible ? shipping.value : 0) - (discount.visible ? discount.value : 0);
     const formatCurrency = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
+    const hidePrices = docType === 'delivery' && paymentMethod === 'hidden';
 
     const getQRUrl = () => {
         const desc = `Thanh toan bao gia ${customer.quoteId || ''}`;
@@ -222,7 +224,10 @@ const StaffDesktopApp = () => {
         const btn = document.getElementById('dl-btn');
         const text = btn.innerHTML;
         btn.innerHTML = 'Exporting...';
-        await exportToPDF('quotation-container', `BaoGia_${customer.name || 'KhachHang'}.pdf`);
+        const filename = docType === 'quote' 
+            ? `BaoGia_${customer.name || 'KhachHang'}.pdf` 
+            : `BienBanGiaoHang_${customer.name || 'KhachHang'}.pdf`;
+        await exportToPDF('quotation-container', filename);
         btn.innerHTML = text;
         confetti();
     };
@@ -307,6 +312,53 @@ const StaffDesktopApp = () => {
             </div>
 
             <div id="quotation-container" className="app-container">
+                {/* Document Type Selector (no-print) */}
+                <div className="doc-type-selector no-print" style={{
+                    display: 'flex',
+                    gap: '10px',
+                    marginBottom: '20px',
+                    background: '#f8fafc',
+                    padding: '6px',
+                    borderRadius: '8px',
+                    width: 'fit-content',
+                    border: '1px solid #e2e8f0'
+                }}>
+                    <button 
+                        type="button" 
+                        onClick={() => setDocType('quote')}
+                        style={{
+                            padding: '6px 16px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: docType === 'quote' ? 'var(--primary)' : 'transparent',
+                            color: docType === 'quote' ? 'white' : '#475569',
+                            fontWeight: 'bold',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Báo Giá
+                    </button>
+                    <button 
+                        type="button" 
+                        onClick={() => setDocType('delivery')}
+                        style={{
+                            padding: '6px 16px',
+                            borderRadius: '6px',
+                            border: 'none',
+                            background: docType === 'delivery' ? 'var(--primary)' : 'transparent',
+                            color: docType === 'delivery' ? 'white' : '#475569',
+                            fontWeight: 'bold',
+                            fontSize: '13px',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Biên Bản Giao Hàng
+                    </button>
+                </div>
+
                 {/* Header Section */}
                 <div className="header">
                     <div className="logo-container">
@@ -321,7 +373,9 @@ const StaffDesktopApp = () => {
                     </div>
                 </div>
 
-                <div className="quotation-title">BÁO GIÁ SƠN LOTUS</div>
+                <div className="quotation-title">
+                    {docType === 'quote' ? 'BÁO GIÁ SƠN LOTUS' : 'BIÊN BẢN GIAO HÀNG'}
+                </div>
                 <div className="date-line">TP. HCM, ngày {today}</div>
 
                 {/* Customer Section */}
@@ -367,7 +421,7 @@ const StaffDesktopApp = () => {
                             </datalist>
                         </div>
                         <div className="field-row right">
-                            <span className="label">SỐ BÁO GIÁ:</span>
+                            <span className="label">{docType === 'quote' ? 'SỐ BÁO GIÁ:' : 'SỐ BIÊN BẢN:'}</span>
                             <input type="text" value={customer.quoteId} onChange={(e) => setCustomer({...customer, quoteId: e.target.value})} placeholder="................" />
                         </div>
                     </div>
@@ -382,9 +436,9 @@ const StaffDesktopApp = () => {
                                 <th className="col-name">TÊN SẢN PHẨM</th>
                                 <th className="col-size">K.L/THÙNG (KG)</th>
                                 <th className="col-unit">ĐVT</th>
-                                <th className="col-price">ĐƠN GIÁ</th>
+                                {!hidePrices && <th className="col-price">ĐƠN GIÁ</th>}
                                 <th className="col-qty">SL</th>
-                                <th className="col-amount">THÀNH TIỀN</th>
+                                {!hidePrices && <th className="col-amount">THÀNH TIỀN</th>}
                                 <th className="col-note">GHI CHÚ</th>
                                 <th className="col-action no-print"></th>
                             </tr>
@@ -428,23 +482,25 @@ const StaffDesktopApp = () => {
                                             </div>
                                         </td>
                                         <td align="center">Thùng</td>
-                                        <td align="right">
-                                            <div className="clean-input right">
-                                                {item.productId ? formatCurrency(price) : (
-                                                    <input 
-                                                        className="clean-input right" 
-                                                        type="text" 
-                                                        value={item.customPrice ? formatCurrency(item.customPrice).trim() : ''} 
-                                                        onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)} 
-                                                        style={{ padding: 0 }}
-                                                    />
-                                                )}
-                                            </div>
-                                        </td>
+                                        {!hidePrices && (
+                                            <td align="right">
+                                                <div className="clean-input right">
+                                                    {item.productId ? formatCurrency(price) : (
+                                                        <input 
+                                                            className="clean-input right" 
+                                                            type="text" 
+                                                            value={item.customPrice ? formatCurrency(item.customPrice).trim() : ''} 
+                                                            onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)} 
+                                                            style={{ padding: 0 }}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </td>
+                                        )}
                                         <td align="center">
                                             <input className="clean-input center" type="number" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)} />
                                         </td>
-                                        <td align="right" className="amount">{formatCurrency(price * item.quantity)}</td>
+                                        {!hidePrices && <td align="right" className="amount">{formatCurrency(price * item.quantity)}</td>}
                                         <td>
                                             <input type="text" className="note-input" value={item.note} onChange={(e) => updateItem(item.id, 'note', e.target.value)} placeholder="" />
                                         </td>
@@ -455,7 +511,7 @@ const StaffDesktopApp = () => {
                                 )
                             })}
                              {/* Costs */}
-                             {shipping.visible && (
+                             {!hidePrices && shipping.visible && (
                                 <tr className="cost-row">
                                     <td colSpan="2" className="label-cell">CHI PHÍ VẬN CHUYỂN</td>
                                     <td colSpan="4"></td>
@@ -476,7 +532,7 @@ const StaffDesktopApp = () => {
                                     <td colSpan="1" className="no-print"><button type="button" onClick={() => setShipping({...shipping, visible: false, value: 0})}>x</button></td>
                                 </tr>
                             )}
-                            {discount.visible && (
+                            {!hidePrices && discount.visible && (
                                 <tr className="cost-row discount">
                                     <td colSpan="2" className="label-cell">GIẢM GIÁ</td>
                                     <td colSpan="4"></td>
@@ -501,20 +557,22 @@ const StaffDesktopApp = () => {
                     </table>
                     <div className="btn-group no-print">
                         <button type="button" className="btn-add" onClick={addItem}><Plus size={14} /> Thêm sản phẩm</button>
-                        {!shipping.visible && (
+                        {!hidePrices && !shipping.visible && (
                             <button type="button" className="btn-add btn-shipping" onClick={() => setShipping({...shipping, visible: true})}><Plus size={14} /> Thêm Vận Chuyển</button>
                         )}
-                        {!discount.visible && (
+                        {!hidePrices && !discount.visible && (
                             <button type="button" className="btn-add btn-discount" onClick={() => setDiscount({...discount, visible: true})}><Plus size={14} /> Thêm Giảm Giá</button>
                         )}
                     </div>
                 </div>
 
                 {/* Total */}
-                <div className="total-section">
-                    <span className="total-label">TỔNG THÀNH TIỀN:</span>
-                    <span className="total-value">{formatCurrency(grandTotal)}</span>
-                </div>
+                {!hidePrices && (
+                    <div className="total-section">
+                        <span className="total-label">TỔNG THÀNH TIỀN:</span>
+                        <span className="total-value">{formatCurrency(grandTotal)}</span>
+                    </div>
+                )}
 
                 <div className="qr-selector-container no-print" style={{ 
                     marginTop: '25px',
@@ -591,31 +649,38 @@ const StaffDesktopApp = () => {
                     gap: '40px',
                     marginTop: '10px'
                 }}>
-                     <div className="notes-container">
-                        <div className="notes-title">Ghi chú:</div>
-                        <textarea 
-                            className="editable-notes-textarea no-print" 
-                            style={{ 
-                                width: '100%', 
-                                border: '1px dashed #e2e8f0', 
-                                padding: '10px', 
-                                borderRadius: '4px', 
-                                minHeight: '80px', 
-                                outline: 'none',
-                                resize: 'none',
-                                fontSize: '13px',
-                                fontFamily: 'inherit',
-                                background: 'transparent'
-                            }}
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Nhập ghi chú tại đây..."
-                        />
-                        <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.4' }}>
-                            {notes}
-                            {staff.bankInfo && `\n\nTHÔNG TIN THANH TOÁN:\n${staff.bankInfo}`}
+                    {docType === 'delivery' ? (
+                        <div className="signature-area" style={{ textAlign: 'center' }}>
+                            <div className="sig-title" style={{ fontWeight: 'bold', fontStyle: 'normal', color: '#4a5568', marginBottom: '80px' }}>Bên Nhận Hàng</div>
+                            <div className="sig-name" style={{ borderTop: '1px dashed #cbd5e0', width: '150px', display: 'inline-block', paddingTop: '10px' }}></div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="notes-container">
+                            <div className="notes-title">Ghi chú:</div>
+                            <textarea 
+                                className="editable-notes-textarea no-print" 
+                                style={{ 
+                                    width: '100%', 
+                                    border: '1px dashed #e2e8f0', 
+                                    padding: '10px', 
+                                    borderRadius: '4px', 
+                                    minHeight: '80px', 
+                                    outline: 'none',
+                                    resize: 'none',
+                                    fontSize: '13px',
+                                    fontFamily: 'inherit',
+                                    background: 'transparent'
+                                }}
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Nhập ghi chú tại đây..."
+                            />
+                            <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.4' }}>
+                                {notes}
+                                {staff.bankInfo && `\n\nTHÔNG TIN THANH TOÁN:\n${staff.bankInfo}`}
+                            </div>
+                        </div>
+                    )}
 
                     {paymentMethod !== 'hidden' && (
                         <div className="qr-code-section" style={{
@@ -656,8 +721,12 @@ const StaffDesktopApp = () => {
                     )}
 
                     <div className="signature-area">
-                        <div className="sig-title">Đại Diện Kinh Doanh</div>
-                        <div className="sig-name" style={{ textTransform: 'uppercase' }}>{staff.fullName || 'CHƯA CẬP NHẬT'}</div>
+                        <div className="sig-title">
+                            {docType === 'delivery' ? 'Bên Giao Hàng' : 'Đại Diện Kinh Doanh'}
+                        </div>
+                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '150px', display: 'inline-block', paddingTop: '10px', textTransform: 'uppercase' }}>
+                            {docType === 'delivery' ? '' : (staff.fullName || 'CHƯA CẬP NHẬT')}
+                        </div>
                     </div>
                 </div>
             </div>
