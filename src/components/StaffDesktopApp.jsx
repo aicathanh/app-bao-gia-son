@@ -744,7 +744,7 @@ const StaffDesktopApp = () => {
                         <div className="sig-title">
                             {docType === 'delivery' ? 'Bên Giao Hàng' : 'Đại Diện Kinh Doanh'}
                         </div>
-                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '150px', display: 'inline-block', paddingTop: '10px', textTransform: 'uppercase' }}>
+                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '180px', display: 'inline-block', paddingTop: '10px', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                             {docType === 'delivery' ? '' : (staff.fullName || 'CHƯA CẬP NHẬT')}
                         </div>
                     </div>

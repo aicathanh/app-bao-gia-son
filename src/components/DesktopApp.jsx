@@ -678,7 +678,7 @@ const DesktopApp = () => {
                         <div className="sig-title">
                             {docType === 'delivery' ? 'Bên Giao Hàng' : 'Đại Diện Kinh Doanh'}
                         </div>
-                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '150px', display: 'inline-block', paddingTop: '10px' }}>
+                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '180px', display: 'inline-block', paddingTop: '10px', whiteSpace: 'nowrap' }}>
                             {docType === 'delivery' ? '' : 'NGUYỄN XUÂN THANH'}
                         </div>
                     </div>
