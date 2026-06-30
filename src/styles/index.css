@@ -294,4 +294,5 @@ input[type=number] {
   .table-responsive { margin-bottom: 10px !important; }
   
   .sig-title { margin-bottom: 40px !important; }
+  .date-line input { border: none !important; }
 }

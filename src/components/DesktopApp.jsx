@@ -312,7 +312,27 @@ const DesktopApp = () => {
                 <div className="quotation-title">
                     {docType === 'quote' ? 'BÁO GIÁ SƠN LOTUS' : 'BIÊN BẢN GIAO HÀNG'}
                 </div>
-                <div className="date-line">TP. HCM, ngày {today}</div>
+                <div className="date-line">
+                    TP. HCM, ngày{' '}
+                    <input 
+                        type="text" 
+                        value={today} 
+                        onChange={(e) => setToday(e.target.value)} 
+                        style={{
+                            border: 'none',
+                            borderBottom: '1px dashed #cbd5e0',
+                            background: 'transparent',
+                            fontFamily: 'inherit',
+                            fontSize: 'inherit',
+                            fontStyle: 'inherit',
+                            color: 'inherit',
+                            width: '90px',
+                            textAlign: 'center',
+                            outline: 'none',
+                            padding: 0
+                        }}
+                    />
+                </div>
 
                 {/* Customer Section */}
                 <div className="customer-section">
