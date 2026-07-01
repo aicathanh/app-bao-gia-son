@@ -1,3 +1,11 @@
+window.onerror = function(message, source, lineno, colno, error) {
+    const errDiv = document.getElementById('login-err');
+    if (errDiv) {
+        errDiv.innerText = `Lỗi JS: ${message} (Dòng ${lineno})`;
+        errDiv.style.display = 'block';
+    }
+};
+
 const supabaseUrl = 'https://zbnnctvggpupdnjmydcu.supabase.co';
 const supabaseKey = 'sb_publishable__Uc7k0lfdHFzBjWT-3o36w_ydCDXOT8';
 const client = supabase.createClient(supabaseUrl, supabaseKey);
