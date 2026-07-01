@@ -420,18 +420,51 @@ function renderStatList(id, data) {
     document.getElementById(id).innerHTML = data.map(([n, v]) => `<div class="stat-item"><span>${n}</span><span class="stat-val">${formatVND(v)}</span></div>`).join('') || 'Trống';
 }
 
-function checkAuth() {
-    if (localStorage.getItem('crm_auth') === 'true') {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('main-app').style.display = 'flex';
-        renderBoard();
+const ALLOWED_EMAILS = [
+    "nguyenxuanthanh2009@gmail.com"
+];
+
+async function checkAuth() {
+    const { data: { session }, error } = await client.auth.getSession();
+    if (session && session.user) {
+        const user = session.user;
+        if (ALLOWED_EMAILS.includes(user.email)) {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            renderBoard();
+        } else {
+            document.getElementById('login-err').innerText = `Email ${user.email} không có quyền truy cập hệ thống!`;
+            document.getElementById('login-err').style.display = 'block';
+            await client.auth.signOut();
+        }
+    } else {
+        document.getElementById('login-overlay').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
     }
 }
 
-function handleLogin() {
-    if (document.getElementById('pass-input').value === THE_PASSWORD) { localStorage.setItem('crm_auth', 'true'); checkAuth(); }
-    else { document.getElementById('login-err').style.display = 'block'; }
+async function handleGoogleLogin() {
+    const { error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin + window.location.pathname
+        }
+    });
+    if (error) {
+        document.getElementById('login-err').innerText = 'Lỗi đăng nhập: ' + error.message;
+        document.getElementById('login-err').style.display = 'block';
+    }
 }
+
+// Lắng nghe sự thay đổi trạng thái auth từ Supabase
+client.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        checkAuth();
+    } else if (event === 'SIGNED_OUT') {
+        document.getElementById('login-overlay').style.display = 'flex';
+        document.getElementById('main-app').style.display = 'none';
+    }
+});
 
 function initDragAndDrop() {
     const board = document.querySelector('.board-container');
@@ -476,9 +509,16 @@ document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     initDragAndDrop();
 
-    document.getElementById('login-btn').onclick = handleLogin;
-    document.getElementById('pass-input').onkeypress = (e) => { if (e.key === 'Enter') handleLogin(); };
-    document.getElementById('logout-btn').onclick = () => { localStorage.removeItem('crm_auth'); location.reload(); };
+    const googleBtn = document.getElementById('google-login-btn');
+    if (googleBtn) googleBtn.onclick = handleGoogleLogin;
+    
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.onclick = async () => {
+            await client.auth.signOut();
+            location.reload();
+        };
+    }
     document.getElementById('dashboard-btn').onclick = openDashboard;
     document.getElementById('customer-btn').onclick = openCustomerList;
     document.getElementById('search-input').oninput = applySearch;

@@ -16,12 +16,22 @@
 <body>
     <!-- Login Overlay -->
     <div id="login-overlay" style="position: fixed; inset: 0; background: #1e293b; z-index: 10000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: white;">
-        <div style="background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; color: #1e293b;">
-            <div style="background: #eff6ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><i data-lucide="lock" style="color: #2563eb;"></i></div>
-            <h2 style="margin-bottom: 10px;">Yêu cầu mật khẩu</h2>
-            <input type="password" id="pass-input" placeholder="••••" style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; font-size: 1.5rem; letter-spacing: 5px; outline: none; margin-bottom: 15px;">
-            <button id="login-btn" style="width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">ĐĂNG NHẬP</button>
-            <p id="login-err" style="color: #ef4444; font-size: 0.8rem; margin-top: 10px; display: none;">Mật khẩu không đúng!</p>
+        <div style="background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 380px; text-align: center; color: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+            <div style="background: #eff6ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;"><i data-lucide="shield-check" style="color: #2563eb; width: 32px; height: 32px;"></i></div>
+            <h2 style="margin-bottom: 8px; font-weight: 800; font-size: 1.3rem;">Lotus CRM Secure</h2>
+            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 25px;">Đăng nhập bằng tài khoản Google được phê duyệt để truy cập hệ thống.</p>
+            
+            <button id="google-login-btn" style="width: 100%; padding: 12px; background: white; color: #374151; border: 1px solid #d1d5db; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <svg width="18" height="18" viewBox="0 0 18 18">
+                    <path fill="#4285F4" d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.79 2.7v2.24h2.9c1.7-1.57 2.69-3.88 2.69-6.57z"/>
+                    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.23l-2.9-2.24c-.8.54-1.84.87-3.06.87-2.35 0-4.34-1.59-5.05-3.73H.95v2.3C2.43 15.89 5.5 18 9 18z"/>
+                    <path fill="#FBBC05" d="M3.95 10.67A5.4 5.4 0 0 1 3.6 9c0-.58.1-1.15.28-1.67V5.03H.95A8.99 8.99 0 0 0 0 9c0 1.45.35 2.82.95 4.03l3-2.36z"/>
+                    <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.4A8.99 8.99 0 0 0 9 0C5.5 0 2.43 2.11.95 4.03l3 2.36C4.66 5.17 6.65 3.58 9 3.58z"/>
+                </svg>
+                Đăng nhập với Google
+            </button>
+            
+            <p id="login-err" style="color: #ef4444; font-size: 0.8rem; margin-top: 15px; display: none; background: #fee2e2; padding: 10px; border-radius: 6px; border: 1px solid #fecaca; font-weight: 600;"></p>
         </div>
     </div>
 
