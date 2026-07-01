@@ -572,6 +572,8 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedLostReason = "";
             document.getElementById('custom-lost-reason').value = "";
         }
+    };
+
     document.querySelectorAll('.modal-close-trigger').forEach(b => {
         b.onclick = () => {
             document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
