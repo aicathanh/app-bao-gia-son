@@ -459,11 +459,7 @@ const DesktopApp = () => {
                                 <th className="col-name">TÊN SẢN PHẨM</th>
                                 <th className="col-size">K.L/THÙNG (KG)</th>
                                 <th className="col-unit">ĐVT</th>
-                                {!hidePrices && (
-                                    <th className="col-price">
-                                        ĐƠN GIÁ {includeVAT ? '(GỒM VAT 8%)' : '(CHƯA VAT)'}
-                                    </th>
-                                )}
+                                {!hidePrices && <th className="col-price">ĐƠN GIÁ</th>}
                                 <th className="col-qty">SL</th>
                                 {!hidePrices && <th className="col-amount">THÀNH TIỀN</th>}
                                 <th className="col-note">GHI CHÚ</th>
