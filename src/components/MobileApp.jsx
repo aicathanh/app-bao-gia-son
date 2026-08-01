@@ -17,6 +17,7 @@ const MobileApp = () => {
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
     const [searchQuery, setSearchQuery] = useState({});
+    const [modalImage, setModalImage] = useState(null);
 
     // Dynamic scale based on item count
     const getScaleStyle = () => {
@@ -83,11 +84,37 @@ const MobileApp = () => {
                 }
             });
 
-            const link = document.createElement('a');
-            link.download = `BaoGia_Lotus_${format(new Date(), 'ddMMyy_HHmm')}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            confetti();
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    setModalImage(dataUrl);
+                    return;
+                }
+
+                const fileName = `BaoGia_Lotus_${format(new Date(), 'ddMMyy_HHmm')}.png`;
+                const file = new File([blob], fileName, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: 'Báo Giá Lotus Paint',
+                            text: 'Bảng báo giá sơn Lotus Paint'
+                        });
+                        confetti();
+                    } catch (shareError) {
+                        console.error('Share error:', shareError);
+                        // If it's not a user cancel (AbortError), show the fallback modal
+                        if (shareError.name !== 'AbortError') {
+                            const dataUrl = canvas.toDataURL('image/png');
+                            setModalImage(dataUrl);
+                        }
+                    }
+                } else {
+                    const dataUrl = canvas.toDataURL('image/png');
+                    setModalImage(dataUrl);
+                }
+            }, 'image/png');
         } catch (error) {
             console.error('Export error:', error);
         } finally {
@@ -268,6 +295,99 @@ const MobileApp = () => {
             <div style={{ textAlign: 'center', padding: '20px 20px 100px 20px', color: '#94a3b8', fontSize: '11px' }}>
                 © {new Date().getFullYear()} Lotus Paint - Phiên bản Mobile
             </div>
+
+            <AnimatePresence>
+                {modalImage && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                            zIndex: 9999,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '20px',
+                            backdropFilter: 'blur(8px)',
+                            WebkitBackdropFilter: 'blur(8px)'
+                        }}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                            style={{
+                                backgroundColor: 'white',
+                                borderRadius: '24px',
+                                width: '100%',
+                                maxWidth: '400px',
+                                padding: '24px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center', marginBottom: '15px' }}>
+                                <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#1e293b' }}>Ảnh Báo Giá Sẵn Sàng</span>
+                                <button 
+                                    onClick={() => setModalImage(null)}
+                                    style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                >
+                                    <X size={18} color="#64748b" />
+                                </button>
+                            </div>
+                            
+                            <p style={{ fontSize: '14px', color: '#475569', textAlign: 'center', margin: '0 0 15px 0', lineHeight: '1.5' }}>
+                                Nhấn giữ vào ảnh bên dưới và chọn <strong>"Lưu vào ảnh"</strong> hoặc <strong>"Chia sẻ"</strong> để lưu báo giá.
+                            </p>
+
+                            <div 
+                                style={{ 
+                                    width: '100%', 
+                                    maxHeight: '45vh', 
+                                    overflowY: 'auto', 
+                                    borderRadius: '12px', 
+                                    border: '1px solid #e2e8f0',
+                                    marginBottom: '20px',
+                                    boxShadow: 'inset 0 2px 4px 0 rgba(0,0,0,0.06)'
+                                }}
+                            >
+                                <img 
+                                    src={modalImage} 
+                                    alt="Báo giá Lotus Paint" 
+                                    style={{ width: '100%', display: 'block', height: 'auto' }} 
+                                />
+                            </div>
+
+                            <button 
+                                onClick={() => setModalImage(null)}
+                                style={{ 
+                                    width: '100%', 
+                                    background: '#2563eb', 
+                                    color: 'white', 
+                                    border: 'none', 
+                                    borderRadius: '12px', 
+                                    padding: '14px', 
+                                    fontWeight: 'bold',
+                                    fontSize: '15px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Hoàn thành
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
