@@ -301,4 +301,9 @@ input[type=number] {
   
   .sig-title { margin-bottom: 40px !important; }
   .date-line input { border: none !important; }
+  
+  /* Hide all input placeholders during printing */
+  input::placeholder, textarea::placeholder {
+    color: transparent !important;
+  }
 }
