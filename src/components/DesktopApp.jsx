@@ -12,6 +12,7 @@ const DesktopApp = () => {
     const defaultItem = { productId: '', size: '5', quantity: 1, note: '', customName: '', customPrice: 0 };
     const products = productData.products;
     const [docType, setDocType] = useState('quote');
+    const [includeVAT, setIncludeVAT] = useState(true);
 
     const [customer, setCustomer] = useState({
         name: '',
@@ -155,11 +156,18 @@ const DesktopApp = () => {
     };
 
     const getPrice = (item) => {
+        let basePrice = 0;
         if (item.productId) {
             const product = products.find(p => p.id === parseInt(item.productId));
-            return product ? product.p_prices[item.size] || 0 : 0;
+            basePrice = product ? product.p_prices[item.size] || 0 : 0;
+        } else {
+            basePrice = item.customPrice || 0;
         }
-        return item.customPrice || 0;
+
+        if (!includeVAT) {
+            return Math.round(basePrice / 1.08);
+        }
+        return basePrice;
     };
 
     const subtotal = items.reduce((sum, item) => sum + (getPrice(item) * item.quantity), 0);
@@ -248,51 +256,110 @@ const DesktopApp = () => {
     return (
         <div className="container">
             <div id="quotation-container" className="app-container">
-                {/* Document Type Selector (no-print) */}
-                <div className="doc-type-selector no-print" style={{
+                {/* Document Type & VAT Selector (no-print) */}
+                <div className="no-print" style={{
                     display: 'flex',
-                    gap: '10px',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     marginBottom: '20px',
-                    background: '#f8fafc',
-                    padding: '6px',
-                    borderRadius: '8px',
-                    width: 'fit-content',
-                    border: '1px solid #e2e8f0'
+                    flexWrap: 'wrap',
+                    gap: '15px'
                 }}>
-                    <button 
-                        type="button" 
-                        onClick={() => setDocType('quote')}
-                        style={{
-                            padding: '6px 16px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            background: docType === 'quote' ? 'var(--primary)' : 'transparent',
-                            color: docType === 'quote' ? 'white' : '#475569',
-                            fontWeight: 'bold',
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Báo Giá
-                    </button>
-                    <button 
-                        type="button" 
-                        onClick={() => setDocType('delivery')}
-                        style={{
-                            padding: '6px 16px',
-                            borderRadius: '6px',
-                            border: 'none',
-                            background: docType === 'delivery' ? 'var(--primary)' : 'transparent',
-                            color: docType === 'delivery' ? 'white' : '#475569',
-                            fontWeight: 'bold',
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        Biên Bản Giao Hàng
-                    </button>
+                    <div className="doc-type-selector" style={{
+                        display: 'flex',
+                        gap: '10px',
+                        background: '#f8fafc',
+                        padding: '6px',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        width: 'fit-content'
+                    }}>
+                        <button 
+                            type="button" 
+                            onClick={() => setDocType('quote')}
+                            style={{
+                                padding: '6px 16px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: docType === 'quote' ? 'var(--primary)' : 'transparent',
+                                color: docType === 'quote' ? 'white' : '#475569',
+                                fontWeight: 'bold',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            Báo Giá
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={() => setDocType('delivery')}
+                            style={{
+                                padding: '6px 16px',
+                                borderRadius: '6px',
+                                border: 'none',
+                                background: docType === 'delivery' ? 'var(--primary)' : 'transparent',
+                                color: docType === 'delivery' ? 'white' : '#475569',
+                                fontWeight: 'bold',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            Biên Bản Giao Hàng
+                        </button>
+                    </div>
+
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        background: '#f8fafc',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        color: '#475569'
+                    }}>
+                        <span>ĐƠN GIÁ:</span>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setIncludeVAT(true)}
+                                style={{
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: includeVAT ? '#2563eb' : 'transparent',
+                                    color: includeVAT ? 'white' : '#475569',
+                                    fontWeight: 'bold',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Có VAT 8% (Giá Gốc)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIncludeVAT(false)}
+                                style={{
+                                    padding: '5px 12px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: !includeVAT ? '#d97706' : 'transparent',
+                                    color: !includeVAT ? 'white' : '#475569',
+                                    fontWeight: 'bold',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Không VAT
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Header Section */}
@@ -392,7 +459,11 @@ const DesktopApp = () => {
                                 <th className="col-name">TÊN SẢN PHẨM</th>
                                 <th className="col-size">K.L/THÙNG (KG)</th>
                                 <th className="col-unit">ĐVT</th>
-                                {!hidePrices && <th className="col-price">ĐƠN GIÁ</th>}
+                                {!hidePrices && (
+                                    <th className="col-price">
+                                        ĐƠN GIÁ {includeVAT ? '(GỒM VAT 8%)' : '(CHƯA VAT)'}
+                                    </th>
+                                )}
                                 <th className="col-qty">SL</th>
                                 {!hidePrices && <th className="col-amount">THÀNH TIỀN</th>}
                                 <th className="col-note">GHI CHÚ</th>
@@ -445,8 +516,12 @@ const DesktopApp = () => {
                                                         <input 
                                                             className="clean-input right" 
                                                             type="text" 
-                                                            value={item.customPrice ? formatCurrency(item.customPrice).trim() : ''} 
-                                                            onChange={(e) => updateItem(item.id, 'customPrice', parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0)} 
+                                                            value={item.customPrice ? formatCurrency(getPrice(item)).trim() : ''} 
+                                                            onChange={(e) => {
+                                                                const val = parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0;
+                                                                const baseVal = includeVAT ? val : Math.round(val * 1.08);
+                                                                updateItem(item.id, 'customPrice', baseVal);
+                                                            }} 
                                                             style={{ padding: 0 }}
                                                         />
                                                     )}
