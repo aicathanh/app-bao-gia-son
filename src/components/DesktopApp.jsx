@@ -23,6 +23,7 @@ const DesktopApp = () => {
 
     const [shipping, setShipping] = useState({ value: 0, note: '', visible: false });
     const [discount, setDiscount] = useState({ value: 0, note: '', visible: false });
+    const [vat, setVat] = useState({ value: 0, note: '', visible: false });
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
     const [notes, setNotes] = useState(() => {
@@ -171,7 +172,9 @@ const DesktopApp = () => {
     };
 
     const subtotal = items.reduce((sum, item) => sum + (getPrice(item) * item.quantity), 0);
-    const grandTotal = subtotal + (shipping.visible ? shipping.value : 0) - (discount.visible ? discount.value : 0);
+    const baseForVat = subtotal + (shipping.visible ? shipping.value : 0) - (discount.visible ? discount.value : 0);
+    const vatValue = vat.visible ? Math.round(baseForVat * 0.08) : 0;
+    const grandTotal = baseForVat + vatValue;
     const formatCurrency = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
     const hidePrices = docType === 'delivery' && paymentMethod === 'hidden';
 
@@ -579,6 +582,28 @@ const DesktopApp = () => {
                                     <td colSpan="1" className="no-print"><button type="button" onClick={() => setDiscount({...discount, visible: false, value: 0})}>x</button></td>
                                 </tr>
                             )}
+                            {!hidePrices && vat.visible && (
+                                <tr className="cost-row">
+                                    <td colSpan="2" className="label-cell">THUẾ GTGT (VAT) 8%</td>
+                                    <td colSpan="4"></td>
+                                    <td align="right" style={{ paddingRight: '5px', fontWeight: 'bold', color: '#4a5568' }}>
+                                        {formatCurrency(vatValue)}
+                                    </td>
+                                    <td style={{ borderRight: '1px solid #e2e8f0' }}>
+                                        <input 
+                                            type="text" 
+                                            className="note-input clean-input" 
+                                            value={vat.note} 
+                                            onChange={(e) => setVat({...vat, note: e.target.value})} 
+                                            placeholder="Ghi chú thuế..." 
+                                            style={{ fontWeight: 'normal', color: '#4a5568' }} 
+                                        />
+                                    </td>
+                                    <td colSpan="1" className="no-print">
+                                        <button type="button" onClick={() => setVat({...vat, visible: false})}>x</button>
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                     <div className="btn-group no-print">
@@ -588,6 +613,9 @@ const DesktopApp = () => {
                         )}
                         {!hidePrices && !discount.visible && (
                             <button type="button" className="btn-add btn-discount" onClick={() => setDiscount({...discount, visible: true})}><Plus size={14} /> Thêm Giảm Giá</button>
+                        )}
+                        {!hidePrices && !vat.visible && (
+                            <button type="button" className="btn-add btn-vat" onClick={() => setVat({...vat, visible: true})}><Plus size={14} /> Thêm VAT 8%</button>
                         )}
                     </div>
                 </div>
