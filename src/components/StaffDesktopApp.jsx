@@ -687,7 +687,7 @@ const StaffDesktopApp = () => {
                                     minHeight: '80px', 
                                     outline: 'none',
                                     resize: 'none',
-                                    fontSize: '13px',
+                                    fontSize: '15px',
                                     fontFamily: 'inherit',
                                     background: 'transparent'
                                 }}
@@ -695,7 +695,7 @@ const StaffDesktopApp = () => {
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Nhập ghi chú tại đây..."
                             />
-                            <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.4' }}>
+                            <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.4' }}>
                                 {notes}
                                 {staff.bankInfo && `\n\nTHÔNG TIN THANH TOÁN:\n${staff.bankInfo}`}
                             </div>

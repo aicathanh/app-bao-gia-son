@@ -12,7 +12,20 @@ const DesktopApp = () => {
     const defaultItem = { productId: '', size: '5', quantity: 1, note: '', customName: '', customPrice: 0 };
     const products = productData.products;
     const [docType, setDocType] = useState('quote');
+    const [signerTitle, setSignerTitle] = useState('Đại Diện Kinh Doanh');
+    const [signerName, setSignerName] = useState('NGUYỄN XUÂN THANH');
     const [includeVAT, setIncludeVAT] = useState(true);
+
+    const handleDocTypeChange = (type) => {
+        setDocType(type);
+        if (type === 'delivery') {
+            setSignerTitle('Bên Giao Hàng');
+            setSignerName('');
+        } else {
+            setSignerTitle('Đại Diện Kinh Doanh');
+            setSignerName('NGUYỄN XUÂN THANH');
+        }
+    };
 
     const [customer, setCustomer] = useState({
         name: '',
@@ -279,7 +292,7 @@ const DesktopApp = () => {
                     }}>
                         <button 
                             type="button" 
-                            onClick={() => setDocType('quote')}
+                            onClick={() => handleDocTypeChange('quote')}
                             style={{
                                 padding: '6px 16px',
                                 borderRadius: '6px',
@@ -296,7 +309,7 @@ const DesktopApp = () => {
                         </button>
                         <button 
                             type="button" 
-                            onClick={() => setDocType('delivery')}
+                            onClick={() => handleDocTypeChange('delivery')}
                             style={{
                                 padding: '6px 16px',
                                 borderRadius: '6px',
@@ -721,7 +734,7 @@ const DesktopApp = () => {
                                     minHeight: '80px', 
                                     outline: 'none',
                                     resize: 'none',
-                                    fontSize: '13px',
+                                    fontSize: '15px',
                                     fontFamily: 'inherit',
                                     background: 'transparent'
                                 }}
@@ -729,7 +742,7 @@ const DesktopApp = () => {
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Nhập ghi chú tại đây..."
                             />
-                            <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '12px', lineHeight: '1.4' }}>
+                            <div className="notes-display only-print" style={{ whiteSpace: 'pre-wrap', fontSize: '14px', lineHeight: '1.4' }}>
                                 {notes}
                             </div>
                         </div>
@@ -775,10 +788,50 @@ const DesktopApp = () => {
 
                     <div className="signature-area">
                         <div className="sig-title">
-                            {docType === 'delivery' ? 'Bên Giao Hàng' : 'Đại Diện Kinh Doanh'}
+                            <input
+                                type="text"
+                                className="editable-sig-input"
+                                value={signerTitle}
+                                onChange={(e) => setSignerTitle(e.target.value)}
+                                placeholder="Chức danh..."
+                                title="Nhấp để sửa chức danh"
+                                style={{
+                                    border: '1px dashed transparent',
+                                    background: 'transparent',
+                                    textAlign: 'center',
+                                    fontStyle: 'italic',
+                                    color: '#718096',
+                                    fontSize: '13px',
+                                    width: '100%',
+                                    maxWidth: '220px',
+                                    outline: 'none',
+                                    fontFamily: 'inherit',
+                                    padding: '2px 4px'
+                                }}
+                            />
                         </div>
-                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '180px', display: 'inline-block', paddingTop: '10px', whiteSpace: 'nowrap' }}>
-                            {docType === 'delivery' ? '' : 'NGUYỄN XUÂN THANH'}
+                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '200px', display: 'inline-block', paddingTop: '8px', whiteSpace: 'nowrap' }}>
+                            <input
+                                type="text"
+                                className="editable-sig-input"
+                                value={signerName}
+                                onChange={(e) => setSignerName(e.target.value)}
+                                placeholder={docType === 'delivery' ? '' : 'Họ và tên...'}
+                                title="Nhấp để sửa họ tên"
+                                style={{
+                                    border: '1px dashed transparent',
+                                    background: 'transparent',
+                                    textAlign: 'center',
+                                    fontWeight: '900',
+                                    color: 'var(--primary)',
+                                    fontSize: '13px',
+                                    width: '100%',
+                                    outline: 'none',
+                                    fontFamily: 'inherit',
+                                    padding: '2px 4px',
+                                    textTransform: 'uppercase'
+                                }}
+                            />
                         </div>
                     </div>
                 </div>

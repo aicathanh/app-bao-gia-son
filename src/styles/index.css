@@ -174,7 +174,7 @@ input[type=number] {
 
 /* Footer */
 .footer-section { display: grid; grid-template-columns: 1.8fr 1fr; gap: 40px; margin-top: 2px; }
-.notes-container { font-size: 12px; color: #4a5568; }
+.notes-container { font-size: 14px; color: #4a5568; }
 .notes-title { font-weight: 800; text-decoration: underline; margin-bottom: 5px; }
 .editable-notes-textarea {
     width: 100%;
@@ -184,7 +184,7 @@ input[type=number] {
     min-height: 100px;
     outline: none;
     resize: none;
-    font-size: 14px;
+    font-size: 16px;
     font-family: inherit;
     background: transparent;
     transition: border-color 0.2s;
@@ -208,6 +208,17 @@ input[type=number] {
 .signature-area { text-align: center; }
 .sig-title { font-style: italic; color: #718096; margin-bottom: 60px; font-size: 13px; }
 .sig-name { font-weight: 900; color: var(--primary); border-top: 1px solid #cbd5e0; display: inline-block; padding-top: 10px; }
+
+.editable-sig-input {
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+.editable-sig-input:hover,
+.editable-sig-input:focus {
+  border-color: #cbd5e0 !important;
+  background-color: #f8fafc !important;
+}
 
 /* Floating Actions */
 .floating-actions {
@@ -301,6 +312,7 @@ input[type=number] {
   
   .sig-title { margin-bottom: 40px !important; }
   .date-line input { border: none !important; }
+  .editable-sig-input { border: none !important; background: transparent !important; }
   
   /* Hide all input placeholders during printing */
   input::placeholder, textarea::placeholder {
