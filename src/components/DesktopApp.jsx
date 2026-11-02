@@ -47,6 +47,15 @@ const DesktopApp = () => {
     const [paymentMethod, setPaymentMethod] = useState('company');
     const [customerList, setCustomerList] = useState([]);
     const notesRef = useRef(null);
+    const titleRef = useRef(null);
+
+    // Auto-adjust title textarea height when content changes
+    useEffect(() => {
+        if (titleRef.current) {
+            titleRef.current.style.height = 'auto';
+            titleRef.current.style.height = `${titleRef.current.scrollHeight}px`;
+        }
+    }, [signerTitle, docType]);
 
     // Auto-save notes to localStorage whenever they change
     useEffect(() => {
@@ -712,7 +721,7 @@ const DesktopApp = () => {
 
                 <div className="footer-section" style={{
                     display: 'grid',
-                    gridTemplateColumns: paymentMethod !== 'hidden' ? '1.8fr 1.2fr 1fr' : '1.8fr 1fr',
+                    gridTemplateColumns: paymentMethod !== 'hidden' ? '1.6fr 1.1fr 1.3fr' : '1.8fr 1.2fr',
                     gap: '40px',
                     marginTop: '10px'
                 }}>
@@ -786,31 +795,23 @@ const DesktopApp = () => {
                         </div>
                     )}
 
-                    <div className="signature-area">
-                        <div className="sig-title">
-                            <input
-                                type="text"
-                                className="editable-sig-input"
+                    <div className="signature-area" style={{ width: '100%', textAlign: 'center' }}>
+                        <div className="sig-title" style={{ width: '100%', marginBottom: '50px' }}>
+                            <textarea
+                                ref={titleRef}
+                                rows={1}
+                                className="editable-sig-title"
                                 value={signerTitle}
-                                onChange={(e) => setSignerTitle(e.target.value)}
+                                onChange={(e) => {
+                                    setSignerTitle(e.target.value);
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = `${e.target.scrollHeight}px`;
+                                }}
                                 placeholder="Chức danh..."
                                 title="Nhấp để sửa chức danh"
-                                style={{
-                                    border: '1px dashed transparent',
-                                    background: 'transparent',
-                                    textAlign: 'center',
-                                    fontStyle: 'italic',
-                                    color: '#718096',
-                                    fontSize: '13px',
-                                    width: '100%',
-                                    maxWidth: '220px',
-                                    outline: 'none',
-                                    fontFamily: 'inherit',
-                                    padding: '2px 4px'
-                                }}
                             />
                         </div>
-                        <div className="sig-name" style={{ borderTop: '1px solid #cbd5e0', width: '200px', display: 'inline-block', paddingTop: '8px', whiteSpace: 'nowrap' }}>
+                        <div className="sig-name" style={{ borderTop: 'none', width: '100%', display: 'inline-block', paddingTop: '0', whiteSpace: 'nowrap' }}>
                             <input
                                 type="text"
                                 className="editable-sig-input"

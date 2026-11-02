@@ -207,7 +207,33 @@ input[type=number] {
 
 .signature-area { text-align: center; }
 .sig-title { font-style: italic; color: #718096; margin-bottom: 60px; font-size: 13px; }
-.sig-name { font-weight: 900; color: var(--primary); border-top: 1px solid #cbd5e0; display: inline-block; padding-top: 10px; }
+.sig-name { font-weight: 900; color: var(--primary); display: inline-block; padding-top: 10px; }
+
+.editable-sig-title {
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  background: transparent;
+  text-align: center;
+  font-style: italic;
+  color: #718096;
+  font-size: 13px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  padding: 2px 4px;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.4;
+  box-sizing: border-box;
+  display: block;
+  transition: all 0.2s;
+}
+
+.editable-sig-title:hover,
+.editable-sig-title:focus {
+  border-color: #cbd5e0 !important;
+  background-color: #f8fafc !important;
+}
 
 .editable-sig-input {
   border: 1px dashed transparent;
@@ -312,6 +338,7 @@ input[type=number] {
   
   .sig-title { margin-bottom: 40px !important; }
   .date-line input { border: none !important; }
+  .editable-sig-title { border: none !important; background: transparent !important; padding: 0 !important; }
   .editable-sig-input { border: none !important; background: transparent !important; }
   
   /* Hide all input placeholders during printing */
