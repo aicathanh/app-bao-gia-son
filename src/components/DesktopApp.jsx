@@ -210,22 +210,8 @@ const DesktopApp = () => {
         return '';
     };
 
-    const handleDownload = async () => {
-        const btn = document.getElementById('dl-btn');
-        const text = btn.innerHTML;
-        btn.innerHTML = 'Exporting...';
-        const filename = docType === 'quote' 
-            ? `BaoGia_${customer.name || 'KhachHang'}.pdf` 
-            : `BienBanGiaoHang_${customer.name || 'KhachHang'}.pdf`;
-        await exportToPDF('quotation-container', filename);
-        btn.innerHTML = text;
-        confetti();
-    };
-
-    const handleSave = async () => {
+    const syncToCRM = async (showAlert = false) => {
         localStorage.setItem('desktop_quotation_notes', notes);
-        
-        // --- SYNC TO CRM LOGIC ---
         try {
             const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
             const supabaseUrl = 'https://zbnnctvggpupdnjmydcu.supabase.co';
@@ -236,7 +222,6 @@ const DesktopApp = () => {
             const productList = items.map(item => {
                 const p = products.find(x => x.id === parseInt(item.productId));
                 let name = p ? p.name : (item.customName || 'SP Khác');
-                // Thêm ghi chú (màu sắc/bóng) vào sau tên sản phẩm
                 if (item.note) {
                     name += ` (${item.note})`;
                 }
@@ -249,33 +234,54 @@ const DesktopApp = () => {
                 id: `ORD-${Date.now()}`,
                 quote_no: customer.quoteId,
                 customer_name: customer.name || 'Khách Vãng Lai',
-                customer_phone: customer.phone, // Mới
-                customer_address: customer.address, // Mới
+                customer_phone: customer.phone,
+                customer_address: customer.address,
                 amount: String(grandTotal),
                 products: productList,
                 status: 'quote',
+                salesperson_name: 'Nguyễn Xuân Thanh',
                 created_at: new Date().toISOString()
             };
 
-            console.log('Sending data to CRM:', orderData);
             const { error } = await supabase.from('orders').upsert(orderData);
-            
             if (error) {
                 console.error('CRM Sync Error Detail:', error);
-                alert('Lỗi Database: ' + error.message);
-                return;
+                if (showAlert) alert('Lỗi Database: ' + error.message);
+                return false;
             }
-            
-            console.log('Synced to CRM successfully!');
+            if (showAlert) {
+                confetti();
+                alert('Đã lưu và đồng bộ sang CRM thành công!');
+            }
+            return true;
         } catch (err) {
             console.error('CRM Sync Error:', err);
-            alert('Lỗi kết nối: ' + err.message);
-            return;
+            if (showAlert) alert('Lỗi kết nối: ' + err.message);
+            return false;
         }
-        // -------------------------
+    };
 
+    const handleDownload = async () => {
+        const btn = document.getElementById('dl-btn');
+        const text = btn.innerHTML;
+        btn.innerHTML = 'Exporting...';
+        const filename = docType === 'quote' 
+            ? `BaoGia_${customer.name || 'KhachHang'}.pdf` 
+            : `BienBanGiaoHang_${customer.name || 'KhachHang'}.pdf`;
+        await exportToPDF('quotation-container', filename);
+        btn.innerHTML = text;
         confetti();
-        alert('Đã lưu và đồng bộ sang CRM thành công!');
+        // Tự động đồng bộ sang CRM (không làm phiền người dùng)
+        syncToCRM(false);
+    };
+
+    const handlePrint = () => {
+        syncToCRM(false);
+        window.print();
+    };
+
+    const handleSave = async () => {
+        await syncToCRM(true);
     };
 
     return (
@@ -840,7 +846,7 @@ const DesktopApp = () => {
 
             <div className="floating-actions no-print">
                 <button type="button" id="dl-btn" className="fab fab-blue" onClick={handleDownload}><Download size={24} /> <span>PDF</span></button>
-                <button type="button" className="fab fab-red" onClick={() => window.print()}><Printer size={24} /> <span>In</span></button>
+                <button type="button" className="fab fab-red" onClick={handlePrint}><Printer size={24} /> <span>In</span></button>
                 <button type="button" className="fab fab-green" onClick={handleSave}><Save size={24} /> <span>Lưu</span></button>
             </div>
         </div>

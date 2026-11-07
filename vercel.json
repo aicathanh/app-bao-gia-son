@@ -1,4 +1,26 @@
 {
+  "redirects": [
+    {
+      "source": "/mini-crm",
+      "destination": "/mini-crm/index.html",
+      "permanent": true
+    },
+    {
+      "source": "/mini-crm/",
+      "destination": "/mini-crm/index.html",
+      "permanent": true
+    },
+    {
+      "source": "/team-crm",
+      "destination": "/team-crm/index.html",
+      "permanent": true
+    },
+    {
+      "source": "/team-crm/",
+      "destination": "/team-crm/index.html",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/team-crm/:path*",

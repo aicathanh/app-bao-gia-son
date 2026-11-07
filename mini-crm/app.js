@@ -17,10 +17,6 @@ let currentMoveData = null;
 let selectedLostReason = "";
 const THE_PASSWORD = "6688";
 
-let cachedDashboardOrders = [];
-let currentActiveDetailType = null;
-let currentArchivedDetailType = null;
-
 const formatVND = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
 async function fetchOrders() {
@@ -382,8 +378,6 @@ function exportToExcel() {
 
 async function openDashboard() {
     const orders = await fetchOrders();
-    cachedDashboardOrders = orders;
-
     const yFilter = document.getElementById('year-filter');
     const currentYear = new Date().getFullYear();
     const years = new Set([currentYear]); orders.forEach(o => years.add(new Date(o.created_at).getFullYear()));
@@ -397,22 +391,10 @@ async function openDashboard() {
     
     document.getElementById('active-account-stats').innerHTML = `
         <div style="display:flex; justify-content:space-around; gap:10px; margin-bottom:20px; background:#eff6ff; padding:15px; border-radius:12px; flex-wrap:wrap;">
-            <div style="text-align:center; min-width:120px; padding: 5px 10px;">
-                <div>TỔNG DOANH SỐ</div>
-                <strong>${formatVND(activeData.totalRevenue)}</strong>
-            </div>
-            <div id="stat-active-company" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
-                CÔNG TY<br>
-                <span style="color:#2563eb; font-weight:700;">${formatVND(activeData.accountMap['Công ty'])}</span>
-            </div>
-            <div id="stat-active-thanh" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
-                THANH<br>
-                <span style="color:#059669; font-weight:700;">${formatVND(activeData.accountMap['Thanh'])}</span>
-            </div>
-            <div id="stat-active-debt" style="text-align:center; color:red; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
-                ĐANG NỢ<br>
-                <strong>${formatVND(activeDebt)}</strong>
-            </div>
+            <div style="text-align:center; min-width:120px;"><div>TỔNG DOANH SỐ</div><strong>${formatVND(activeData.totalRevenue)}</strong></div>
+            <div style="text-align:center;">CÔNG TY<br><span style="color:#2563eb; font-weight:700;">${formatVND(activeData.accountMap['Công ty'])}</span></div>
+            <div style="text-align:center;">THANH<br><span style="color:#059669; font-weight:700;">${formatVND(activeData.accountMap['Thanh'])}</span></div>
+            <div style="text-align:center; color:red;">ĐANG NỢ<br><strong>${formatVND(activeDebt)}</strong></div>
         </div>
     `;
 
@@ -420,284 +402,17 @@ async function openDashboard() {
     const archData = calculateStats(archived);
     document.getElementById('archived-account-stats').innerHTML = `
         <div style="display:flex; justify-content:space-around; gap:10px; margin-bottom:20px; background:#f5f3ff; padding:15px; border-radius:12px; flex-wrap:wrap;">
-            <div style="text-align:center; min-width:120px; padding: 5px 10px;">
-                <div>TỔNG LỊCH SỬ</div>
-                <strong>${formatVND(archData.totalRevenue)}</strong>
-            </div>
-            <div id="stat-archived-company" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
-                CÔNG TY<br>
-                <strong style="color:#2563eb;">${formatVND(archData.accountMap['Công ty'])}</strong>
-            </div>
-            <div id="stat-archived-thanh" style="text-align:center; cursor:pointer; padding: 5px 10px; border-radius:8px; transition: background 0.2s;" class="dashboard-stat-btn">
-                THANH<br>
-                <strong style="color:#059669;">${formatVND(archData.accountMap['Thanh'])}</strong>
-            </div>
+            <div style="text-align:center; min-width:120px;"><div>TỔNG LỊCH SỬ</div><strong>${formatVND(archData.totalRevenue)}</strong></div>
+            <div style="text-align:center;">CÔNG TY<br><strong>${formatVND(archData.accountMap['Công ty'])}</strong></div>
+            <div style="text-align:center;">THANH<br><strong>${formatVND(archData.accountMap['Thanh'])}</strong></div>
         </div>
     `;
-
-    // Bind click events
-    const cActive = document.getElementById('stat-active-company');
-    if (cActive) cActive.onclick = () => showActiveDetails('company');
-    const tActive = document.getElementById('stat-active-thanh');
-    if (tActive) tActive.onclick = () => showActiveDetails('thanh');
-    const dActive = document.getElementById('stat-active-debt');
-    if (dActive) dActive.onclick = () => showActiveDetails('debt');
-
-    const cArchived = document.getElementById('stat-archived-company');
-    if (cArchived) cArchived.onclick = () => showArchivedDetails('company');
-    const tArchived = document.getElementById('stat-archived-thanh');
-    if (tArchived) tArchived.onclick = () => showArchivedDetails('thanh');
-
-    // Refresh details if already open
-    if (currentActiveDetailType) {
-        const type = currentActiveDetailType;
-        currentActiveDetailType = null;
-        showActiveDetails(type);
-    } else {
-        const activeContainer = document.getElementById('active-details-container');
-        if (activeContainer) activeContainer.style.display = 'none';
-    }
-
-    if (currentArchivedDetailType) {
-        const type = currentArchivedDetailType;
-        currentArchivedDetailType = null;
-        showArchivedDetails(type);
-    } else {
-        const archivedContainer = document.getElementById('archived-details-container');
-        if (archivedContainer) archivedContainer.style.display = 'none';
-    }
 
     renderStatList('active-top-customers', activeData.topCustomers);
     renderStatList('active-top-products', activeData.topProducts);
     renderStatList('archived-top-customers', archData.topCustomers);
     renderStatList('archived-top-products', archData.topProducts);
     document.getElementById('dashboard-modal').classList.add('active');
-}
-
-function closeModal(modal) {
-    if (!modal) return;
-    modal.classList.remove('active');
-    if (modal.id === 'dashboard-modal') {
-        currentActiveDetailType = null;
-        currentArchivedDetailType = null;
-        const activeContainer = document.getElementById('active-details-container');
-        if (activeContainer) activeContainer.style.display = 'none';
-        const archivedContainer = document.getElementById('archived-details-container');
-        if (archivedContainer) archivedContainer.style.display = 'none';
-    }
-}
-
-function showActiveDetails(type) {
-    const container = document.getElementById('active-details-container');
-    if (!container) return;
-    
-    if (currentActiveDetailType === type) {
-        container.style.display = 'none';
-        currentActiveDetailType = null;
-        updateActiveStatHighlights();
-        return;
-    }
-    
-    currentActiveDetailType = type;
-    updateActiveStatHighlights();
-    
-    const active = cachedDashboardOrders.filter(o => o.status === 'paid' || o.status === 'debt');
-    let filtered = [];
-    let title = '';
-    let accentColor = '#2563eb';
-    
-    if (type === 'company') {
-        filtered = active.filter(o => o.payment_account === 'Công ty');
-        title = 'Chi tiết Doanh số Công ty (Đang chạy)';
-        accentColor = '#2563eb';
-    } else if (type === 'thanh') {
-        filtered = active.filter(o => o.payment_account === 'Thanh');
-        title = 'Chi tiết Doanh số Thanh (Đang chạy)';
-        accentColor = '#059669';
-    } else if (type === 'debt') {
-        filtered = active.filter(o => o.status === 'debt');
-        title = 'Chi tiết Khách hàng Đang Nợ';
-        accentColor = '#dc2626';
-    }
-    
-    renderDetailsTable(container, title, filtered, accentColor);
-}
-
-function showArchivedDetails(type) {
-    const container = document.getElementById('archived-details-container');
-    if (!container) return;
-    
-    if (currentArchivedDetailType === type) {
-        container.style.display = 'none';
-        currentArchivedDetailType = null;
-        updateArchivedStatHighlights();
-        return;
-    }
-    
-    currentArchivedDetailType = type;
-    updateArchivedStatHighlights();
-    
-    const yFilter = document.getElementById('year-filter');
-    const month = document.getElementById('month-filter').value;
-    const year = yFilter ? yFilter.value : new Date().getFullYear().toString();
-    
-    const archived = cachedDashboardOrders.filter(o => { 
-        const d = new Date(o.created_at); 
-        return o.status === 'archived' && d.getFullYear().toString() === year && (month === 'all' ? true : d.getMonth().toString() === month); 
-    });
-    
-    let filtered = [];
-    let title = '';
-    let accentColor = '#2563eb';
-    
-    if (type === 'company') {
-        filtered = archived.filter(o => o.payment_account === 'Công ty');
-        title = `Chi tiết Doanh số Công ty - Lịch sử (Năm ${year} - ${month === 'all' ? 'Tất cả tháng' : 'Tháng ' + (parseInt(month)+1)})`;
-        accentColor = '#2563eb';
-    } else if (type === 'thanh') {
-        filtered = archived.filter(o => o.payment_account === 'Thanh');
-        title = `Chi tiết Doanh số Thanh - Lịch sử (Năm ${year} - ${month === 'all' ? 'Tất cả tháng' : 'Tháng ' + (parseInt(month)+1)})`;
-        accentColor = '#059669';
-    }
-    
-    renderDetailsTable(container, title, filtered, accentColor);
-}
-
-function renderDetailsTable(container, title, orders, accentColor) {
-    if (!container) return;
-    container.style.display = 'block';
-    
-    const totalAmount = orders.reduce((sum, o) => sum + parseFloat(o.amount || 0), 0);
-    
-    let tableRows = '';
-    if (orders.length === 0) {
-        tableRows = `<tr><td colspan="5" style="text-align:center; color:#64748b; padding: 20px;">Không có dữ liệu</td></tr>`;
-    } else {
-        tableRows = orders.map(o => {
-            const dateStr = new Date(o.created_at).toLocaleDateString('vi-VN');
-            const statusLabel = STATUS_MAP[o.status] || o.status;
-            
-            let contactHtml = 'N/A';
-            if (o.customer_phone) {
-                const cleanPhone = o.customer_phone.replace(/[^0-9]/g, '');
-                contactHtml = `
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <a href="tel:${o.customer_phone}" style="color:#2563eb; font-weight:600; text-decoration:none; white-space:nowrap;">${o.customer_phone}</a>
-                        <a href="https://zalo.me/${cleanPhone}" target="_blank" style="padding:2px 8px; background:#0068ff; color:white; border-radius:6px; font-size:0.65rem; text-decoration:none; font-weight:700; display:inline-block; white-space:nowrap;">Zalo</a>
-                    </div>
-                `;
-            }
-            
-            return `
-                <tr>
-                    <td style="white-space:nowrap;">${dateStr}</td>
-                    <td>
-                        <a href="#" class="detail-link" data-id="${o.id}" style="color:#1e293b; font-weight:700; text-decoration:underline;">${o.customer_name || 'N/A'}</a>
-                    </td>
-                    <td>${contactHtml}</td>
-                    <td style="font-weight:700; color:${o.status === 'debt' ? 'red' : 'inherit'};">${formatVND(o.amount || 0)}</td>
-                    <td style="white-space:nowrap;">
-                        <span class="status-badge" style="padding:2px 6px; border-radius:4px; font-size:0.7rem; font-weight:700; background:${o.status === 'debt' ? '#fee2e2' : o.status === 'archived' ? '#f1f5f9' : '#dcfce7'}; color:${o.status === 'debt' ? '#b91c1c' : o.status === 'archived' ? '#475569' : '#15803d'};">
-                            ${statusLabel}
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-    
-    container.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid ${accentColor}; flex-wrap:wrap; gap:10px;">
-            <h4 style="color:${accentColor}; margin:0; font-size:0.95rem; font-weight:800;">${title}</h4>
-            <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                <span style="font-size:0.85rem; font-weight:700; background:#f1f5f9; padding:4px 10px; border-radius:6px;">
-                    Tổng cộng: <span style="color:${accentColor}; font-weight:800;">${formatVND(totalAmount)}</span> (${orders.length} đơn)
-                </span>
-                <button class="close-details-btn" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:0.8rem; font-weight:700; display:flex; align-items:center; gap:4px; padding:4px;">
-                    <i data-lucide="x" style="width:14px; height:14px;"></i> Đóng
-                </button>
-            </div>
-        </div>
-        <div style="max-height: 250px; overflow-y: auto; border:1px solid #f1f5f9; border-radius:8px;">
-            <table class="data-table" style="font-size:0.85rem; width:100%; margin-top:0;">
-                <thead>
-                    <tr>
-                        <th style="font-size:0.7rem; padding:8px 12px;">Ngày</th>
-                        <th style="font-size:0.7rem; padding:8px 12px;">Họ tên</th>
-                        <th style="font-size:0.7rem; padding:8px 12px;">Liên hệ</th>
-                        <th style="font-size:0.7rem; padding:8px 12px;">Số tiền</th>
-                        <th style="font-size:0.7rem; padding:8px 12px;">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${tableRows}
-                </tbody>
-            </table>
-        </div>
-    `;
-    
-    container.querySelector('.close-details-btn').onclick = () => {
-        container.style.display = 'none';
-        if (container.id === 'active-details-container') {
-            currentActiveDetailType = null;
-            updateActiveStatHighlights();
-        } else {
-            currentArchivedDetailType = null;
-            updateArchivedStatHighlights();
-        }
-    };
-    
-    container.querySelectorAll('.detail-link').forEach(link => {
-        link.onclick = (e) => {
-            e.preventDefault();
-            const orderId = link.dataset.id;
-            const order = cachedDashboardOrders.find(o => o.id == orderId);
-            if (order) {
-                showDetails(order);
-            }
-        };
-    });
-    
-    lucide.createIcons();
-}
-
-function updateActiveStatHighlights() {
-    const ids = {
-        'company': 'stat-active-company',
-        'thanh': 'stat-active-thanh',
-        'debt': 'stat-active-debt'
-    };
-    
-    Object.entries(ids).forEach(([type, id]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (currentActiveDetailType === type) {
-            el.style.background = 'rgba(0, 0, 0, 0.08)';
-            el.style.boxShadow = 'inset 0 0 0 2px rgba(37, 99, 235, 0.2)';
-        } else {
-            el.style.background = 'transparent';
-            el.style.boxShadow = 'none';
-        }
-    });
-}
-
-function updateArchivedStatHighlights() {
-    const ids = {
-        'company': 'stat-archived-company',
-        'thanh': 'stat-archived-thanh'
-    };
-    
-    Object.entries(ids).forEach(([type, id]) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (currentArchivedDetailType === type) {
-            el.style.background = 'rgba(0, 0, 0, 0.08)';
-            el.style.boxShadow = 'inset 0 0 0 2px rgba(37, 99, 235, 0.2)';
-        } else {
-            el.style.background = 'transparent';
-            el.style.boxShadow = 'none';
-        }
-    });
 }
 
 function calculateStats(orders) {
@@ -801,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     checkAuth();
     initDragAndDrop();
+    initOcrScanner();
 
     const googleBtn = document.getElementById('google-login-btn');
     if (googleBtn) googleBtn.onclick = handleGoogleLogin;
@@ -861,19 +577,427 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.modal-close-trigger').forEach(b => {
         b.onclick = () => {
-            const modal = b.closest('.modal');
-            closeModal(modal);
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
             if (currentMoveData && (currentMoveData.status === 'lost' || currentMoveData.status === 'archived')) renderBoard();
         };
     });
 
-    window.onclick = (e) => { 
-        if (e.target.classList.contains('modal')) {
-            closeModal(e.target);
-        }
-    };
+    window.onclick = (e) => { if (e.target.classList.contains('modal')) e.target.classList.remove('active'); };
 
 });
+
+// ==========================================
+// --- OCR / AI QUOTATION SCANNER MODULE ---
+// ==========================================
+let currentOcrImageBase64 = null;
+let currentOcrMimeType = 'image/png';
+
+function openOcrModal() {
+    const modal = document.getElementById('ocr-modal');
+    if (!modal) return;
+    resetOcrModal();
+    modal.classList.add('active');
+    lucide.createIcons();
+}
+
+function resetOcrModal() {
+    const dropzone = document.getElementById('ocr-dropzone');
+    const loading = document.getElementById('ocr-loading');
+    const resultContainer = document.getElementById('ocr-result-container');
+    const fileInput = document.getElementById('ocr-file-input');
+
+    if (dropzone) dropzone.style.display = 'block';
+    if (loading) loading.style.display = 'none';
+    if (resultContainer) resultContainer.style.display = 'none';
+    if (fileInput) fileInput.value = '';
+    currentOcrImageBase64 = null;
+}
+
+function initOcrScanner() {
+    const ocrBtn = document.getElementById('ocr-btn');
+    const quickOcrBtn = document.getElementById('quick-ocr-btn');
+    const ocrModal = document.getElementById('ocr-modal');
+    const ocrDropzone = document.getElementById('ocr-dropzone');
+    const ocrFileInput = document.getElementById('ocr-file-input');
+    const ocrReuploadBtn = document.getElementById('ocr-reupload-btn');
+    const ocrSaveBtn = document.getElementById('ocr-save-btn');
+    const ocrCancelBtn = document.getElementById('ocr-cancel-btn');
+    const amountInput = document.getElementById('ocr-amount');
+
+    if (ocrBtn) ocrBtn.onclick = openOcrModal;
+    if (quickOcrBtn) quickOcrBtn.onclick = openOcrModal;
+
+    if (ocrDropzone && ocrFileInput) {
+        ocrDropzone.onclick = () => ocrFileInput.click();
+        ocrFileInput.onchange = (e) => {
+            if (e.target.files && e.target.files[0]) {
+                processOcrFile(e.target.files[0]);
+            }
+        };
+
+        // Drag and drop support
+        ocrDropzone.ondragover = (e) => {
+            e.preventDefault();
+            ocrDropzone.style.borderColor = '#2563eb';
+            ocrDropzone.style.background = '#eff6ff';
+        };
+        ocrDropzone.ondragleave = (e) => {
+            e.preventDefault();
+            ocrDropzone.style.borderColor = '#93c5fd';
+            ocrDropzone.style.background = '#f8fafc';
+        };
+        ocrDropzone.ondrop = (e) => {
+            e.preventDefault();
+            ocrDropzone.style.borderColor = '#93c5fd';
+            ocrDropzone.style.background = '#f8fafc';
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                processOcrFile(e.dataTransfer.files[0]);
+            }
+        };
+    }
+
+    if (ocrReuploadBtn) {
+        ocrReuploadBtn.onclick = resetOcrModal;
+    }
+
+    if (ocrCancelBtn && ocrModal) {
+        ocrCancelBtn.onclick = () => {
+            ocrModal.classList.remove('active');
+            resetOcrModal();
+        };
+    }
+
+    if (amountInput) {
+        amountInput.oninput = () => {
+            const val = parseInt(amountInput.value, 10) || 0;
+            const preview = document.getElementById('ocr-amount-preview');
+            if (preview) preview.innerText = formatVND(val);
+        };
+    }
+
+    if (ocrSaveBtn) {
+        ocrSaveBtn.onclick = saveOcrOrderToCRM;
+    }
+
+    // Global Paste Support (Ctrl+V / Cmd+V)
+    window.addEventListener('paste', (e) => {
+        const activeTag = document.activeElement ? document.activeElement.tagName : '';
+        if (['INPUT', 'TEXTAREA'].includes(activeTag)) return;
+
+        const clipboardItems = (e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData))?.items;
+        if (!clipboardItems) return;
+
+        for (let item of clipboardItems) {
+            if (item.type && item.type.indexOf('image') !== -1) {
+                const file = item.getAsFile();
+                if (file) {
+                    openOcrModal();
+                    processOcrFile(file);
+                    break;
+                }
+            }
+        }
+    });
+
+    // Gemini API Key config
+    const geminiKeyBtn = document.getElementById('gemini-key-toggle-btn');
+    if (geminiKeyBtn) {
+        geminiKeyBtn.onclick = () => {
+            const box = document.getElementById('gemini-key-box');
+            if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        };
+    }
+
+    const saveGeminiKeyBtn = document.getElementById('save-gemini-key-btn');
+    const keyInput = document.getElementById('gemini-key-input');
+    if (keyInput) keyInput.value = localStorage.getItem('lotus_gemini_api_key') || '';
+    if (saveGeminiKeyBtn) {
+        saveGeminiKeyBtn.onclick = () => {
+            const key = document.getElementById('gemini-key-input').value.trim();
+            if (key) {
+                localStorage.setItem('lotus_gemini_api_key', key);
+                alert('Đã lưu Gemini API Key! Từ giờ hệ thống sẽ ưu tiên dùng Gemini Vision AI.');
+            } else {
+                localStorage.removeItem('lotus_gemini_api_key');
+                alert('Đã xóa Gemini API Key (sẽ dùng OCR Tesseract cục bộ).');
+            }
+        };
+    }
+}
+
+async function processOcrFile(file) {
+    if (!file || !file.type.startsWith('image/')) {
+        alert('Vui lòng chọn hoặc dán file hình ảnh hợp lệ (PNG, JPG, WebP)!');
+        return;
+    }
+
+    currentOcrMimeType = file.type;
+    const dropzone = document.getElementById('ocr-dropzone');
+    const loading = document.getElementById('ocr-loading');
+    const resultContainer = document.getElementById('ocr-result-container');
+    const statusText = document.getElementById('ocr-status-text');
+    const previewImg = document.getElementById('ocr-preview-img');
+
+    if (dropzone) dropzone.style.display = 'none';
+    if (loading) loading.style.display = 'block';
+    if (resultContainer) resultContainer.style.display = 'none';
+    if (statusText) statusText.innerText = 'Đang tải ảnh và chuẩn bị nhận diện...';
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const dataUrl = e.target.result;
+        if (previewImg) previewImg.src = dataUrl;
+        currentOcrImageBase64 = dataUrl.split(',')[1];
+
+        const geminiApiKey = localStorage.getItem('lotus_gemini_api_key');
+        let parsedData = null;
+
+        if (geminiApiKey) {
+            try {
+                if (statusText) statusText.innerText = 'Đang dùng Gemini Vision AI để trích xuất dữ liệu báo giá...';
+                parsedData = await extractWithGemini(currentOcrImageBase64, currentOcrMimeType, geminiApiKey);
+            } catch (err) {
+                console.warn('Gemini extraction failed, falling back to Tesseract OCR:', err);
+                if (statusText) statusText.innerText = 'Gemini bận, đang chuyển sang quét OCR Tesseract...';
+            }
+        }
+
+        if (!parsedData) {
+            try {
+                if (statusText) statusText.innerText = 'Đang quét ký tự quang học OCR (Tesseract.js)...';
+                parsedData = await extractWithTesseract(dataUrl, (progress) => {
+                    if (progress && progress.status === 'recognizing text' && statusText) {
+                        statusText.innerText = `Đang đọc chữ từ ảnh: ${Math.round(progress.progress * 100)}%`;
+                    }
+                });
+            } catch (err) {
+                console.error('Tesseract error:', err);
+                alert('Không thể nhận diện ảnh: ' + (err.message || 'Lỗi xử lý OCR'));
+                resetOcrModal();
+                return;
+            }
+        }
+
+        if (loading) loading.style.display = 'none';
+        if (resultContainer) resultContainer.style.display = 'block';
+        lucide.createIcons();
+
+        document.getElementById('ocr-customer-name').value = parsedData.customer_name || '';
+        document.getElementById('ocr-customer-phone').value = parsedData.customer_phone || '';
+        document.getElementById('ocr-customer-address').value = parsedData.customer_address || '';
+        document.getElementById('ocr-quote-no').value = parsedData.quote_no || '';
+        document.getElementById('ocr-amount').value = parsedData.amount || 0;
+        const previewAmt = document.getElementById('ocr-amount-preview');
+        if (previewAmt) previewAmt.innerText = formatVND(parsedData.amount || 0);
+        document.getElementById('ocr-products').value = parsedData.products || '';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function extractWithGemini(base64Image, mimeType, apiKey) {
+    const prompt = `Bạn là trợ lý CRM phân tích ảnh chụp bảng báo giá sơn Lotus Paint. Hãy trích xuất đúng các thông tin sau thành JSON thuần (chỉ trả về JSON hợp lệ, không bọc markdown \`\`\`json, không kèm lời giải thích):\n` +
+    `{\n` +
+    `  "customer_name": "Tên khách hàng",\n` +
+    `  "customer_phone": "Số điện thoại khách hàng",\n` +
+    `  "customer_address": "Địa chỉ giao hàng",\n` +
+    `  "quote_no": "Số báo giá (ví dụ: 0711/BBG/ABC-BT)",\n` +
+    `  "amount": 15000000,\n` +
+    `  "products": "Tóm tắt các sản phẩm dạng: Tên sơn(Quy cách-Số lượng-Thành tiền)"\n` +
+    `}\n` +
+    `Lưu ý: "amount" phải là số nguyên (integer), không chứa dấu chấm hoặc phẩy hoặc chữ đ. Nếu không tìm thấy thông tin nào thì để rỗng.`;
+
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    let lastError = null;
+
+    for (let model of models) {
+        try {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { inline_data: { mime_type: mimeType || 'image/png', data: base64Image } },
+                            { text: prompt }
+                        ]
+                    }],
+                    generationConfig: {
+                        temperature: 0.1,
+                        response_mime_type: "application/json"
+                    }
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error?.message || `HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (textResponse) {
+                const cleanJsonStr = textResponse.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+                const obj = JSON.parse(cleanJsonStr);
+                return {
+                    customer_name: obj.customer_name || '',
+                    customer_phone: obj.customer_phone || '',
+                    customer_address: obj.customer_address || '',
+                    quote_no: obj.quote_no || '',
+                    amount: parseInt(obj.amount, 10) || 0,
+                    products: obj.products || ''
+                };
+            }
+        } catch (e) {
+            lastError = e;
+            console.warn(`Model ${model} failed, trying next:`, e);
+        }
+    }
+    throw lastError || new Error('Không thể trích xuất qua Gemini AI');
+}
+
+async function extractWithTesseract(imageSource, onProgress) {
+    if (typeof Tesseract === 'undefined') {
+        throw new Error('Thư viện Tesseract OCR chưa tải xong, vui lòng kiểm tra kết nối mạng!');
+    }
+
+    const worker = await Tesseract.createWorker('vie+eng');
+    if (onProgress) {
+        worker.setParameters({
+            logger: onProgress
+        });
+    }
+
+    const ret = await worker.recognize(imageSource);
+    await worker.terminate();
+
+    const rawText = ret.data?.text || '';
+    return parseQuotationText(rawText);
+}
+
+function parseQuotationText(text) {
+    let customer_name = '';
+    let customer_phone = '';
+    let customer_address = '';
+    let quote_no = '';
+    let amount = 0;
+    let products = '';
+
+    // 1. TÊN KHÁCH HÀNG: ...
+    const nameMatch = text.match(/(?:TÊN KHÁCH HÀNG|KHÁCH HÀNG|TÊN KH)[:\s]+([^\n\r]+)/i);
+    if (nameMatch) {
+        customer_name = nameMatch[1].replace(/^[.\s_:-]+|[.\s_:-]+$/g, '').trim();
+    }
+
+    // 2. SĐT: ...
+    const phoneMatch = text.match(/(?:SĐT|ĐIỆN THOẠI|PHONE|TEL)[:\s]+([0-9\s.]{9,15})/i) || text.match(/\b(0[3|5|7|8|9][0-9]{8})\b/);
+    if (phoneMatch) {
+        customer_phone = phoneMatch[1].replace(/[^0-9]/g, '');
+    }
+
+    // 3. ĐỊA CHỈ GIAO HÀNG: ...
+    const addrMatch = text.match(/(?:ĐỊA CHỈ GIAO HÀNG|ĐỊA CHỈ|Đ\/C)[:\s]+([^\n\r]+)/i);
+    if (addrMatch) {
+        customer_address = addrMatch[1].replace(/^[.\s_:-]+|[.\s_:-]+$/g, '').trim();
+    }
+
+    // 4. SỐ BÁO GIÁ: ...
+    const quoteMatch = text.match(/(?:SỐ BÁO GIÁ|SỐ BIÊN BẢN|SỐ BG)[:\s]+([0-9A-Z\/\-_]+)/i) || text.match(/([0-9]{2,4}\/BBG\/[0-9A-Z\-_]+)/i);
+    if (quoteMatch) {
+        quote_no = quoteMatch[1].trim();
+    }
+
+    // 5. TỔNG THANH TOÁN / TỔNG CỘNG
+    const amountMatch = text.match(/(?:TỔNG THANH TOÁN|TỔNG CỘNG TIỀN HÀNG|TỔNG CỘNG|TỔNG TIỀN|THÀNH TIỀN)[:\s]*([0-9.,]+)/i);
+    if (amountMatch) {
+        amount = parseInt(amountMatch[1].replace(/[^0-9]/g, ''), 10) || 0;
+    } else {
+        const candidates = [...text.matchAll(/([0-9]{1,3}(?:[.,][0-9]{3}){1,3})/g)]
+            .map(m => parseInt(m[1].replace(/[^0-9]/g, ''), 10))
+            .filter(n => n >= 50000);
+        if (candidates.length > 0) {
+            amount = Math.max(...candidates);
+        }
+    }
+
+    // 6. Products summary
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const productLines = [];
+    let insideTable = false;
+    for (let line of lines) {
+        if (/STT|TÊN SẢN PHẨM|QUY CÁCH|ĐƠN GIÁ/i.test(line)) {
+            insideTable = true;
+            continue;
+        }
+        if (/TỔNG|Ghi chú|Thanh toán|STK|ACB|Eximbank/i.test(line)) {
+            insideTable = false;
+        }
+        if (insideTable && line.length > 5) {
+            productLines.push(line);
+        }
+    }
+    products = productLines.slice(0, 10).join('; ') || 'Báo giá từ ảnh chụp';
+
+    return {
+        customer_name,
+        customer_phone,
+        customer_address,
+        quote_no,
+        amount,
+        products
+    };
+}
+
+async function saveOcrOrderToCRM() {
+    const name = document.getElementById('ocr-customer-name').value.trim() || 'Khách Mới (Từ Ảnh)';
+    const phone = document.getElementById('ocr-customer-phone').value.trim();
+    const address = document.getElementById('ocr-customer-address').value.trim();
+    let quoteNo = document.getElementById('ocr-quote-no').value.trim();
+    const amountVal = document.getElementById('ocr-amount').value.trim();
+    const products = document.getElementById('ocr-products').value.trim() || 'Báo giá từ ảnh chụp';
+
+    if (!quoteNo) {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const cleanName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
+        const abbr = cleanName.trim().split(/\s+/).map(w => w[0]).join('').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'XYZ';
+        quoteNo = `${dd}${mm}/BBG/${abbr}-BT`;
+    }
+
+    const orderData = {
+        id: `ORD-${Date.now()}`,
+        quote_no: quoteNo,
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: address,
+        amount: String(amountVal || 0),
+        products: products,
+        status: 'quote', // ĐƯA VÀO CỘT BÁO GIÁ
+        salesperson_name: 'Nguyễn Xuân Thanh',
+        created_at: new Date().toISOString()
+    };
+
+    const saveBtn = document.getElementById('ocr-save-btn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerText = 'Đang lưu vào CRM...';
+
+    const { error } = await client.from('orders').upsert(orderData);
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalText;
+
+    if (error) {
+        alert('Lỗi lưu vào CRM: ' + error.message);
+        return;
+    }
+
+    document.getElementById('ocr-modal').classList.remove('active');
+    resetOcrModal();
+    if (typeof confetti === 'function') confetti();
+    await renderBoard();
+    alert(`Đã thêm thành công khách hàng "${name}" vào cột Báo Giá!`);
+}
 
 
 
