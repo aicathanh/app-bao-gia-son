@@ -778,6 +778,24 @@ async function processOcrFile(file) {
             }
         }
 
+        // Tra cứu bổ sung: Nếu chưa đọc được tên nhưng có số điện thoại, tìm tên trong các đơn cũ
+        if ((!parsedData.customer_name || parsedData.customer_name.length < 2) && parsedData.customer_phone) {
+            try {
+                const { data: matchedOrders } = await client.from('orders')
+                    .select('customer_name, customer_address')
+                    .eq('customer_phone', parsedData.customer_phone)
+                    .limit(1);
+                if (matchedOrders && matchedOrders.length > 0 && matchedOrders[0].customer_name) {
+                    parsedData.customer_name = matchedOrders[0].customer_name;
+                    if (!parsedData.customer_address && matchedOrders[0].customer_address) {
+                        parsedData.customer_address = matchedOrders[0].customer_address;
+                    }
+                }
+            } catch (e) {
+                console.warn('Customer phone lookup error:', e);
+            }
+        }
+
         if (loading) loading.style.display = 'none';
         if (resultContainer) resultContainer.style.display = 'block';
         lucide.createIcons();
@@ -795,16 +813,19 @@ async function processOcrFile(file) {
 }
 
 async function extractWithGemini(base64Image, mimeType, apiKey) {
-    const prompt = `Bạn là trợ lý CRM phân tích ảnh chụp bảng báo giá sơn Lotus Paint. Hãy trích xuất đúng các thông tin sau thành JSON thuần (chỉ trả về JSON hợp lệ, không bọc markdown \`\`\`json, không kèm lời giải thích):\n` +
+    const prompt = `Bạn là trợ lý CRM chuyên trích xuất dữ liệu từ ảnh chụp bảng báo giá sơn Lotus Paint. Hãy trích xuất đúng các thông tin sau thành đúng 1 JSON hợp lệ (không kèm markdown \`\`\`json, không kèm lời giải thích):\n` +
     `{\n` +
     `  "customer_name": "Tên khách hàng",\n` +
-    `  "customer_phone": "Số điện thoại khách hàng",\n` +
+    `  "customer_phone": "Số điện thoại",\n` +
     `  "customer_address": "Địa chỉ giao hàng",\n` +
     `  "quote_no": "Số báo giá (ví dụ: 0711/BBG/ABC-BT)",\n` +
     `  "amount": 15000000,\n` +
-    `  "products": "Tóm tắt các sản phẩm dạng: Tên sơn(Quy cách-Số lượng-Thành tiền)"\n` +
+    `  "products": "Tên sản phẩm kèm quy cách, số lượng, thành tiền"\n` +
     `}\n` +
-    `Lưu ý: "amount" phải là số nguyên (integer), không chứa dấu chấm hoặc phẩy hoặc chữ đ. Nếu không tìm thấy thông tin nào thì để rỗng.`;
+    `LƯU Ý ĐẶC BIỆT:\n` +
+    `- "customer_name": Là tên khách hàng nằm ở dòng "TÊN KHÁCH HÀNG: ...", hãy bỏ qua các dấu chấm placeholder "........." nếu có và lấy đúng tên người mua (ví dụ: "Anh Nam", "Chị Hương", "Công ty ABC").\n` +
+    `- "customer_address": Là địa chỉ nằm ở dòng "ĐỊA CHỈ GIAO HÀNG: ...", không lấy địa chỉ công ty Lotus ở phần đầu.\n` +
+    `- "amount": Phải là số nguyên (integer), lấy số tiền ở dòng "TỔNG THANH TOÁN: ...", không chứa dấu chấm hoặc phẩy hoặc chữ đ.`;
 
     const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
     let lastError = null;
@@ -883,35 +904,99 @@ function parseQuotationText(text) {
     let amount = 0;
     let products = '';
 
-    // 1. TÊN KHÁCH HÀNG: ...
-    const nameMatch = text.match(/(?:TÊN KHÁCH HÀNG|KHÁCH HÀNG|TÊN KH)[:\s]+([^\n\r]+)/i);
-    if (nameMatch) {
-        customer_name = nameMatch[1].replace(/^[.\s_:-]+|[.\s_:-]+$/g, '').trim();
+    const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+    // 1. TÊN KHÁCH HÀNG (Multi-strategy)
+    const nameLabelRegex = /(?:TÊN\s*KHÁCH\s*HÀNG|TEN\s*KHACH\s*HANG|TÊN\s*KHÁCH|TEN\s*KHACH|KHÁCH\s*HÀNG|KHACH\s*HANG|TÊN\s*KH|TEN\s*KH)/i;
+    const nameEndRegex = /(?:ĐỊA\s*CHỈ\s*GIAO\s*HÀNG|DIA\s*CHI\s*GIAO\s*HANG|ĐỊA\s*CHỈ|DIA\s*CHI|SĐT|SDT|ĐIỆN\s*THOẠI|PHONE|TEL|SỐ\s*BÁO\s*GIÁ|SO\s*BAO\s*GIA|SỐ\s*BIÊN\s*BẢN|STT|TỔNG|\n\s*\n|$)/i;
+
+    // Strategy 1: Khối giữa "TÊN KHÁCH HÀNG" và mục tiếp theo (ĐỊA CHỈ, SĐT,...)
+    const nameBlockMatch = text.match(new RegExp(nameLabelRegex.source + '[:\\s]*([\\s\\S]*?)(?=' + nameEndRegex.source + ')', 'i'));
+    if (nameBlockMatch && nameBlockMatch[1]) {
+        let candidate = nameBlockMatch[1]
+            .replace(/[.:_\-–—]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        if (candidate.length >= 2 && !/^(địa chỉ|sđt|số báo giá|báo giá)/i.test(candidate)) {
+            customer_name = candidate;
+        }
     }
 
-    // 2. SĐT: ...
+    // Strategy 2: Quét từng dòng (dòng hiện tại sau dấu hai chấm hoặc dòng kế tiếp)
+    if (!customer_name) {
+        for (let i = 0; i < rawLines.length; i++) {
+            const line = rawLines[i];
+            const cleanLine = line.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            if (cleanLine.includes('ten khach') || cleanLine.includes('khach hang')) {
+                let afterColon = line.replace(/^[^:]*[:]/, '')
+                    .replace(/[.:_\-–—]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (afterColon.length >= 2 && !/^(địa chỉ|sđt|số báo giá)/i.test(afterColon)) {
+                    customer_name = afterColon;
+                    break;
+                }
+                if (i + 1 < rawLines.length) {
+                    const nextLine = rawLines[i + 1]
+                        .replace(/[.:_\-–—]+/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+                    const cleanNext = nextLine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                    if (!cleanNext.includes('dia chi') && !cleanNext.includes('sdt') && !cleanNext.includes('so bao gia') && nextLine.length >= 2) {
+                        customer_name = nextLine;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Strategy 3: Regex nới lỏng
+    if (!customer_name) {
+        const looseMatch = text.match(/(?:TÊN\s*KHÁCH|KHÁCH\s*HÀNG|TEN\s*KHACH)[:\s]+([^\n\r]+)/i);
+        if (looseMatch) {
+            customer_name = looseMatch[1].replace(/[.:_\-–—]+/g, ' ').trim();
+        }
+    }
+
+    // 2. SĐT
     const phoneMatch = text.match(/(?:SĐT|ĐIỆN THOẠI|PHONE|TEL)[:\s]+([0-9\s.]{9,15})/i) || text.match(/\b(0[3|5|7|8|9][0-9]{8})\b/);
     if (phoneMatch) {
         customer_phone = phoneMatch[1].replace(/[^0-9]/g, '');
     }
 
-    // 3. ĐỊA CHỈ GIAO HÀNG: ...
-    const addrMatch = text.match(/(?:ĐỊA CHỈ GIAO HÀNG|ĐỊA CHỈ|Đ\/C)[:\s]+([^\n\r]+)/i);
-    if (addrMatch) {
-        customer_address = addrMatch[1].replace(/^[.\s_:-]+|[.\s_:-]+$/g, '').trim();
+    // 3. ĐỊA CHỈ GIAO HÀNG (Chỉ quét phần sau tiêu đề báo giá để tránh nhầm địa chỉ công ty)
+    const afterTitleIdx = text.search(/BÁO GIÁ|TÊN KHÁCH HÀNG|TEN KHACH HANG/i);
+    const textToSearchAddr = afterTitleIdx !== -1 ? text.slice(afterTitleIdx) : text;
+    const addrLabelRegex = /(?:ĐỊA\s*CHỈ\s*GIAO\s*HÀNG|DIA\s*CHI\s*GIAO\s*HANG|ĐỊA\s*CHỈ|DIA\s*CHI)/i;
+    const addrEndRegex = /(?:SĐT|SDT|ĐIỆN\s*THOẠI|PHONE|TEL|SỐ\s*BÁO\s*GIÁ|SO\s*BAO\s*GIA|SỐ\s*BIÊN\s*BẢN|STT|TỔNG|\n\s*\n|$)/i;
+
+    const addrBlockMatch = textToSearchAddr.match(new RegExp(addrLabelRegex.source + '[:\\s]*([\\s\\S]*?)(?=' + addrEndRegex.source + ')', 'i'));
+    if (addrBlockMatch && addrBlockMatch[1]) {
+        customer_address = addrBlockMatch[1]
+            .replace(/[._\-–—]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+    if (!customer_address) {
+        const addrMatch = textToSearchAddr.match(/(?:ĐỊA CHỈ GIAO HÀNG|ĐỊA CHỈ)[:\s]+([^\n\r]+)/i);
+        if (addrMatch) {
+            customer_address = addrMatch[1].replace(/^[.\s_:-]+|[.\s_:-]+$/g, '').trim();
+        }
     }
 
-    // 4. SỐ BÁO GIÁ: ...
+    // 4. SỐ BÁO GIÁ
     const quoteMatch = text.match(/(?:SỐ BÁO GIÁ|SỐ BIÊN BẢN|SỐ BG)[:\s]+([0-9A-Z\/\-_]+)/i) || text.match(/([0-9]{2,4}\/BBG\/[0-9A-Z\-_]+)/i);
     if (quoteMatch) {
         quote_no = quoteMatch[1].trim();
     }
 
-    // 5. TỔNG THANH TOÁN / TỔNG CỘNG
-    const amountMatch = text.match(/(?:TỔNG THANH TOÁN|TỔNG CỘNG TIỀN HÀNG|TỔNG CỘNG|TỔNG TIỀN|THÀNH TIỀN)[:\s]*([0-9.,]+)/i);
+    // 5. TỔNG THANH TOÁN (Không bắt nhầm "THÀNH TIỀN" của bảng sản phẩm)
+    const amountMatch = text.match(/(?:TỔNG\s*THANH\s*TOÁN|TỔNG\s*CỘNG\s*TIỀN\s*HÀNG|TỔNG\s*TIỀN|TỔNG\s*CỘNG)[:\s]*([0-9.,\s]+)/i);
     if (amountMatch) {
         amount = parseInt(amountMatch[1].replace(/[^0-9]/g, ''), 10) || 0;
-    } else {
+    }
+    if (amount < 1000) {
         const candidates = [...text.matchAll(/([0-9]{1,3}(?:[.,][0-9]{3}){1,3})/g)]
             .map(m => parseInt(m[1].replace(/[^0-9]/g, ''), 10))
             .filter(n => n >= 50000);
@@ -920,11 +1005,10 @@ function parseQuotationText(text) {
         }
     }
 
-    // 6. Products summary
-    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    // 6. Sản phẩm
     const productLines = [];
     let insideTable = false;
-    for (let line of lines) {
+    for (let line of rawLines) {
         if (/STT|TÊN SẢN PHẨM|QUY CÁCH|ĐƠN GIÁ/i.test(line)) {
             insideTable = true;
             continue;
