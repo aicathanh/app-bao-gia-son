@@ -725,6 +725,55 @@ function initOcrScanner() {
     }
 }
 
+function cleanAndSeparateNameAndAddress(name, address) {
+    let cleanName = (name || '').trim();
+    let cleanAddr = (address || '').trim();
+
+    // 1. Tách nếu trong Tên có chứa các từ khóa của nhãn "ĐỊA CHỈ"
+    const addrKeywordRegex = /(?:Đ[ỊIÍÌ]A\s*CH[ỈIÍĨ]\s*GIAO\s*H[ÀA]NG|D[IỊ]A\s*CH[IỈ]\s*GIAO\s*H[AÀ]NG|Đ[ỊIÍÌ]A\s*CH[ỈIÍĨ]|D[IỊ]A\s*CH[IỈ]|Đ\/C\s*GIAO\s*H[ÀA]NG|Đ\/C|DC\s*GIAO\s*H[AÀ]NG)[:\s-]*/i;
+    const splitMatch = cleanName.match(addrKeywordRegex);
+    if (splitMatch) {
+        const parts = cleanName.split(splitMatch[0]);
+        cleanName = parts[0].trim();
+        const extractedAddr = parts.slice(1).join(' ').trim();
+        if (extractedAddr && (!cleanAddr || cleanAddr.length < 5)) {
+            cleanAddr = extractedAddr;
+        }
+    }
+
+    // 2. Tách nếu tên chứa dấu xuống dòng \n
+    if (cleanName.includes('\n')) {
+        const lines = cleanName.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length > 1) {
+            cleanName = lines[0];
+            const rest = lines.slice(1).join(', ');
+            if (rest && (!cleanAddr || cleanAddr.length < 5)) {
+                cleanAddr = rest;
+            }
+        }
+    }
+
+    // 3. Tách nếu trong tên có các mẫu địa chỉ thường gặp (Số nhà, Đường, Phường, Quận, Ấp, Xã, KDC, v.v...)
+    const addressPattern = /(?:\b(?:Số\s+\d+|Đường|Đ\.|Phường|P\.|Quận|Q\.|Huyện|H\.|Xã|Ấp|Thị trấn|TP\.|Tỉnh|KDC|Chung cư|Tòa nhà|Toà nhà)\b|\d+[\/-]\d+|\b\d+\s+[A-Za-zÀ-ỹ])/i;
+    const matchAddr = cleanName.match(addressPattern);
+    if (matchAddr && matchAddr.index > 2) {
+        const candidateName = cleanName.slice(0, matchAddr.index).replace(/[-–,:\s]+$/, '').trim();
+        const candidateAddr = cleanName.slice(matchAddr.index).trim();
+        if (candidateName.length >= 2) {
+            cleanName = candidateName;
+            if (!cleanAddr || cleanAddr.length < 5) {
+                cleanAddr = candidateAddr;
+            }
+        }
+    }
+
+    // Xóa các ký tự thừa ở đầu và cuối chuỗi
+    cleanName = cleanName.replace(/^[.\s_:\-–—,]+|[.\s_:\-–—,]+$/g, '').trim();
+    cleanAddr = cleanAddr.replace(/^[.\s_:\-–—,]+|[.\s_:\-–—,]+$/g, '').trim();
+
+    return { name: cleanName, address: cleanAddr };
+}
+
 async function processOcrFile(file) {
     if (!file || !file.type.startsWith('image/')) {
         alert('Vui lòng chọn hoặc dán file hình ảnh hợp lệ (PNG, JPG, WebP)!');
@@ -751,25 +800,30 @@ async function processOcrFile(file) {
 
         const geminiApiKey = localStorage.getItem('lotus_gemini_api_key');
         let parsedData = null;
+        let engineUsed = 'tesseract';
+        let geminiErrorMsg = null;
 
         if (geminiApiKey) {
             try {
-                if (statusText) statusText.innerText = 'Đang dùng Gemini Vision AI để trích xuất dữ liệu báo giá...';
+                if (statusText) statusText.innerText = 'Đang dùng Google Gemini Vision AI để trích xuất dữ liệu...';
                 parsedData = await extractWithGemini(currentOcrImageBase64, currentOcrMimeType, geminiApiKey);
+                engineUsed = 'gemini';
             } catch (err) {
-                console.warn('Gemini extraction failed, falling back to Tesseract OCR:', err);
-                if (statusText) statusText.innerText = 'Gemini bận, đang chuyển sang quét OCR Tesseract...';
+                console.error('Gemini extraction failed:', err);
+                geminiErrorMsg = err.message || 'Lỗi kết nối Gemini API';
+                if (statusText) statusText.innerText = `Gemini báo lỗi (${geminiErrorMsg}). Đang chuyển sang Tesseract OCR...`;
             }
         }
 
         if (!parsedData) {
             try {
-                if (statusText) statusText.innerText = 'Đang quét ký tự quang học OCR (Tesseract.js)...';
+                if (statusText && !geminiApiKey) statusText.innerText = 'Đang quét ký tự quang học OCR (Tesseract.js)...';
                 parsedData = await extractWithTesseract(dataUrl, (progress) => {
                     if (progress && progress.status === 'recognizing text' && statusText) {
                         statusText.innerText = `Đang đọc chữ từ ảnh: ${Math.round(progress.progress * 100)}%`;
                     }
                 });
+                engineUsed = 'tesseract';
             } catch (err) {
                 console.error('Tesseract error:', err);
                 alert('Không thể nhận diện ảnh: ' + (err.message || 'Lỗi xử lý OCR'));
@@ -777,6 +831,11 @@ async function processOcrFile(file) {
                 return;
             }
         }
+
+        // --- BƯỚC QUAN TRỌNG: TÁCH RIÊNG TÊN VÀ ĐỊA CHỈ NẾU BỊ DÍNH NHAU ---
+        const separated = cleanAndSeparateNameAndAddress(parsedData.customer_name, parsedData.customer_address);
+        parsedData.customer_name = separated.name;
+        parsedData.customer_address = separated.address;
 
         // Tra cứu bổ sung: Nếu chưa đọc được tên nhưng có số điện thoại, tìm tên trong các đơn cũ
         if ((!parsedData.customer_name || parsedData.customer_name.length < 2) && parsedData.customer_phone) {
@@ -798,6 +857,28 @@ async function processOcrFile(file) {
 
         if (loading) loading.style.display = 'none';
         if (resultContainer) resultContainer.style.display = 'block';
+
+        // Cập nhật huy hiệu công nghệ nhận diện
+        const badgeDiv = document.getElementById('ocr-badge-status') || document.querySelector('#ocr-result-container .ocr-field')?.parentElement?.firstElementChild;
+        if (badgeDiv) {
+            if (engineUsed === 'gemini') {
+                badgeDiv.innerHTML = '<i data-lucide="sparkles" style="width: 16px; height: 16px;"></i> Nhận diện bằng Google Gemini AI (Chính xác cao)';
+                badgeDiv.style.background = '#eff6ff';
+                badgeDiv.style.color = '#1d4ed8';
+                badgeDiv.style.borderColor = '#bfdbfe';
+            } else if (geminiErrorMsg) {
+                badgeDiv.innerHTML = `<i data-lucide="alert-triangle" style="width: 16px; height: 16px;"></i> Gemini lỗi (${geminiErrorMsg}) - Đã tự động dùng OCR Tesseract`;
+                badgeDiv.style.background = '#fef3c7';
+                badgeDiv.style.color = '#92400e';
+                badgeDiv.style.borderColor = '#fde68a';
+            } else {
+                badgeDiv.innerHTML = '<i data-lucide="check-circle" style="width: 16px; height: 16px;"></i> Nhận diện bằng OCR Tesseract. Vui lòng kiểm tra lại:';
+                badgeDiv.style.background = '#f0fdf4';
+                badgeDiv.style.color = '#166534';
+                badgeDiv.style.borderColor = '#bbf7d0';
+            }
+        }
+
         lucide.createIcons();
 
         document.getElementById('ocr-customer-name').value = parsedData.customer_name || '';
@@ -813,46 +894,54 @@ async function processOcrFile(file) {
 }
 
 async function extractWithGemini(base64Image, mimeType, apiKey) {
-    const prompt = `Bạn là trợ lý CRM chuyên trích xuất dữ liệu từ ảnh chụp bảng báo giá sơn Lotus Paint. Hãy trích xuất đúng các thông tin sau thành đúng 1 JSON hợp lệ (không kèm markdown \`\`\`json, không kèm lời giải thích):\n` +
+    const prompt = `Bạn là trợ lý AI chuyên bóc tách dữ liệu từ ảnh chụp bảng báo giá sơn Lotus Paint. Hãy trích xuất chính xác các thông tin thành đúng 1 JSON hợp lệ (không markdown, không giải thích):\n` +
     `{\n` +
     `  "customer_name": "Tên khách hàng",\n` +
     `  "customer_phone": "Số điện thoại",\n` +
     `  "customer_address": "Địa chỉ giao hàng",\n` +
     `  "quote_no": "Số báo giá (ví dụ: 0711/BBG/ABC-BT)",\n` +
     `  "amount": 15000000,\n` +
-    `  "products": "Tên sản phẩm kèm quy cách, số lượng, thành tiền"\n` +
+    `  "products": "Tên các sản phẩm trong bảng kèm quy cách và số lượng"\n` +
     `}\n` +
-    `LƯU Ý ĐẶC BIỆT:\n` +
-    `- "customer_name": Là tên khách hàng nằm ở dòng "TÊN KHÁCH HÀNG: ...", hãy bỏ qua các dấu chấm placeholder "........." nếu có và lấy đúng tên người mua (ví dụ: "Anh Nam", "Chị Hương", "Công ty ABC").\n` +
-    `- "customer_address": Là địa chỉ nằm ở dòng "ĐỊA CHỈ GIAO HÀNG: ...", không lấy địa chỉ công ty Lotus ở phần đầu.\n` +
-    `- "amount": Phải là số nguyên (integer), lấy số tiền ở dòng "TỔNG THANH TOÁN: ...", không chứa dấu chấm hoặc phẩy hoặc chữ đ.`;
+    `QUY TẮC BẮT BUỘC ĐỂ KHÔNG NHẦM LẪN:\n` +
+    `1. "customer_name": CHỈ LẤY TÊN CỦA KHÁCH HÀNG (ở dòng TÊN KHÁCH HÀNG: ...). Bỏ qua các dấu chấm "....". TUYỆT ĐỐI KHÔNG GHÉP ĐỊA CHỈ VÀO TRƯỜNG TÊN NÀY!\n` +
+    `2. "customer_address": LẤY ĐỊA CHỈ GIAO HÀNG (ở dòng ĐỊA CHỈ GIAO HÀNG: ...). Không lấy địa chỉ công ty Bích Trang ở phần logo đầu trang.\n` +
+    `3. "customer_phone": Số điện thoại của khách hàng (ở mục SĐT).\n` +
+    `4. "amount": Là tổng số tiền thanh toán cuối cùng (dạng số nguyên integer không dấu chấm, ví dụ 15000000).\n`;
 
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    const models = ['gemini-1.5-flash', 'gemini-2.0-flash'];
     let lastError = null;
 
     for (let model of models) {
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.trim()}`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{
+                        role: "user",
                         parts: [
-                            { inline_data: { mime_type: mimeType || 'image/png', data: base64Image } },
+                            {
+                                inlineData: {
+                                    mimeType: mimeType || 'image/png',
+                                    data: base64Image
+                                }
+                            },
                             { text: prompt }
                         ]
                     }],
                     generationConfig: {
                         temperature: 0.1,
-                        response_mime_type: "application/json"
+                        responseMimeType: "application/json"
                     }
                 })
             });
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error?.message || `HTTP ${res.status}`);
+                const errMsg = errData.error?.message || `HTTP ${res.status}`;
+                throw new Error(errMsg);
             }
 
             const data = await res.json();
@@ -865,16 +954,16 @@ async function extractWithGemini(base64Image, mimeType, apiKey) {
                     customer_phone: obj.customer_phone || '',
                     customer_address: obj.customer_address || '',
                     quote_no: obj.quote_no || '',
-                    amount: parseInt(obj.amount, 10) || 0,
+                    amount: parseInt(String(obj.amount || 0).replace(/[^0-9]/g, ''), 10) || 0,
                     products: obj.products || ''
                 };
             }
         } catch (e) {
             lastError = e;
-            console.warn(`Model ${model} failed, trying next:`, e);
+            console.warn(`Model ${model} error:`, e.message);
         }
     }
-    throw lastError || new Error('Không thể trích xuất qua Gemini AI');
+    throw lastError || new Error('Không thể kết nối Gemini API');
 }
 
 async function extractWithTesseract(imageSource, onProgress) {
@@ -906,56 +995,39 @@ function parseQuotationText(text) {
 
     const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-    // 1. TÊN KHÁCH HÀNG (Multi-strategy)
+    // 1. TÊN KHÁCH HÀNG: Chỉ lấy trên dòng TÊN KHÁCH HÀNG hoặc trước nhãn ĐỊA CHỈ
     const nameLabelRegex = /(?:TÊN\s*KHÁCH\s*HÀNG|TEN\s*KHACH\s*HANG|TÊN\s*KHÁCH|TEN\s*KHACH|KHÁCH\s*HÀNG|KHACH\s*HANG|TÊN\s*KH|TEN\s*KH)/i;
-    const nameEndRegex = /(?:ĐỊA\s*CHỈ\s*GIAO\s*HÀNG|DIA\s*CHI\s*GIAO\s*HANG|ĐỊA\s*CHỈ|DIA\s*CHI|SĐT|SDT|ĐIỆN\s*THOẠI|PHONE|TEL|SỐ\s*BÁO\s*GIÁ|SO\s*BAO\s*GIA|SỐ\s*BIÊN\s*BẢN|STT|TỔNG|\n\s*\n|$)/i;
+    const nameEndRegex = /(?:Đ[ỊIÍÌ]A\s*CH[ỈIÍĨ]|D[IỊ]A\s*CH[IỈ]|Đ\/C|SĐT|SDT|ĐIỆN\s*THOẠI|PHONE|TEL|SỐ\s*BÁO\s*GIÁ|SO\s*BAO\s*GIA|SỐ\s*BIÊN\s*BẢN|STT|TỔNG|\n|$)/i;
 
-    // Strategy 1: Khối giữa "TÊN KHÁCH HÀNG" và mục tiếp theo (ĐỊA CHỈ, SĐT,...)
-    const nameBlockMatch = text.match(new RegExp(nameLabelRegex.source + '[:\\s]*([\\s\\S]*?)(?=' + nameEndRegex.source + ')', 'i'));
-    if (nameBlockMatch && nameBlockMatch[1]) {
-        let candidate = nameBlockMatch[1]
-            .replace(/[.:_\-–—]+/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-        if (candidate.length >= 2 && !/^(địa chỉ|sđt|số báo giá|báo giá)/i.test(candidate)) {
-            customer_name = candidate;
-        }
-    }
-
-    // Strategy 2: Quét từng dòng (dòng hiện tại sau dấu hai chấm hoặc dòng kế tiếp)
-    if (!customer_name) {
-        for (let i = 0; i < rawLines.length; i++) {
-            const line = rawLines[i];
-            const cleanLine = line.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            if (cleanLine.includes('ten khach') || cleanLine.includes('khach hang')) {
-                let afterColon = line.replace(/^[^:]*[:]/, '')
-                    .replace(/[.:_\-–—]+/g, ' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-                if (afterColon.length >= 2 && !/^(địa chỉ|sđt|số báo giá)/i.test(afterColon)) {
-                    customer_name = afterColon;
-                    break;
-                }
-                if (i + 1 < rawLines.length) {
-                    const nextLine = rawLines[i + 1]
-                        .replace(/[.:_\-–—]+/g, ' ')
-                        .replace(/\s+/g, ' ')
-                        .trim();
-                    const cleanNext = nextLine.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                    if (!cleanNext.includes('dia chi') && !cleanNext.includes('sdt') && !cleanNext.includes('so bao gia') && nextLine.length >= 2) {
-                        customer_name = nextLine;
-                        break;
-                    }
-                }
+    // Ưu tiên 1: Quét trên dòng có TÊN KHÁCH HÀNG
+    for (let line of rawLines) {
+        if (nameLabelRegex.test(line)) {
+            let afterColon = line.replace(new RegExp('^.*?' + nameLabelRegex.source + '[:\\s-]*', 'i'), '')
+                .replace(/[.:_\-–—]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            // Nếu trên cùng dòng có nhãn địa chỉ hoặc sđt thì cắt ra
+            const cutAddr = afterColon.search(nameEndRegex);
+            if (cutAddr !== -1) {
+                afterColon = afterColon.slice(0, cutAddr).trim();
+            }
+            if (afterColon.length >= 2) {
+                customer_name = afterColon;
+                break;
             }
         }
     }
 
-    // Strategy 3: Regex nới lỏng
+    // Ưu tiên 2: Dòng kế tiếp nếu dòng trước chỉ có nhãn
     if (!customer_name) {
-        const looseMatch = text.match(/(?:TÊN\s*KHÁCH|KHÁCH\s*HÀNG|TEN\s*KHACH)[:\s]+([^\n\r]+)/i);
-        if (looseMatch) {
-            customer_name = looseMatch[1].replace(/[.:_\-–—]+/g, ' ').trim();
+        for (let i = 0; i < rawLines.length; i++) {
+            if (nameLabelRegex.test(rawLines[i]) && i + 1 < rawLines.length) {
+                const nextLine = rawLines[i + 1].replace(/[.:_\-–—]+/g, ' ').trim();
+                if (!nameEndRegex.test(nextLine) && nextLine.length >= 2) {
+                    customer_name = nextLine;
+                    break;
+                }
+            }
         }
     }
 
@@ -968,7 +1040,7 @@ function parseQuotationText(text) {
     // 3. ĐỊA CHỈ GIAO HÀNG (Chỉ quét phần sau tiêu đề báo giá để tránh nhầm địa chỉ công ty)
     const afterTitleIdx = text.search(/BÁO GIÁ|TÊN KHÁCH HÀNG|TEN KHACH HANG/i);
     const textToSearchAddr = afterTitleIdx !== -1 ? text.slice(afterTitleIdx) : text;
-    const addrLabelRegex = /(?:ĐỊA\s*CHỈ\s*GIAO\s*HÀNG|DIA\s*CHI\s*GIAO\s*HANG|ĐỊA\s*CHỈ|DIA\s*CHI)/i;
+    const addrLabelRegex = /(?:Đ[ỊIÍÌ]A\s*CH[ỈIÍĨ]\s*GIAO\s*H[ÀA]NG|D[IỊ]A\s*CH[IỈ]\s*GIAO\s*H[AÀ]NG|Đ[ỊIÍÌ]A\s*CH[ỈIÍĨ]|D[IỊ]A\s*CH[IỈ])/i;
     const addrEndRegex = /(?:SĐT|SDT|ĐIỆN\s*THOẠI|PHONE|TEL|SỐ\s*BÁO\s*GIÁ|SO\s*BAO\s*GIA|SỐ\s*BIÊN\s*BẢN|STT|TỔNG|\n\s*\n|$)/i;
 
     const addrBlockMatch = textToSearchAddr.match(new RegExp(addrLabelRegex.source + '[:\\s]*([\\s\\S]*?)(?=' + addrEndRegex.source + ')', 'i'));
@@ -979,11 +1051,16 @@ function parseQuotationText(text) {
             .trim();
     }
     if (!customer_address) {
-        const addrMatch = textToSearchAddr.match(/(?:ĐỊA CHỈ GIAO HÀNG|ĐỊA CHỈ)[:\s]+([^\n\r]+)/i);
+        const addrMatch = textToSearchAddr.match(new RegExp(addrLabelRegex.source + '[:\\s]+([^\\n\\r]+)', 'i'));
         if (addrMatch) {
             customer_address = addrMatch[1].replace(/^[.\s_:-]+|[.\s_:-]+$/g, '').trim();
         }
     }
+
+    // Tách riêng tên và địa chỉ nếu có sự chồng lấn
+    const separated = cleanAndSeparateNameAndAddress(customer_name, customer_address);
+    customer_name = separated.name;
+    customer_address = separated.address;
 
     // 4. SỐ BÁO GIÁ
     const quoteMatch = text.match(/(?:SỐ BÁO GIÁ|SỐ BIÊN BẢN|SỐ BG)[:\s]+([0-9A-Z\/\-_]+)/i) || text.match(/([0-9]{2,4}\/BBG\/[0-9A-Z\-_]+)/i);
