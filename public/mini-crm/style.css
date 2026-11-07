@@ -178,6 +178,38 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-app); color:
     #ocr-result-container > div {
         grid-template-columns: 1fr !important;
     }
+    /* Trên mobile: ẩn gợi ý Ctrl+V, hiện gợi ý thư viện */
+    .ocr-hint-desktop { display: none !important; }
+    .ocr-hint-mobile { display: block !important; }
+    /* Trên mobile: ẩn label desktop, hiện label mobile */
+    .ocr-btn-label-desktop { display: none !important; }
+    .ocr-btn-label-mobile { display: inline !important; }
+    /* Modal fullscreen trên mobile */
+    .modal-content {
+        border-radius: 16px 16px 0 0 !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        max-height: 92vh !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    /* Nút trong OCR to hơn cho ngón tay */
+    #ocr-save-btn, #ocr-cancel-btn {
+        padding: 14px !important;
+        font-size: 1rem !important;
+    }
+    /* Input fields to hơn trên mobile */
+    .ocr-field input, .ocr-field textarea {
+        padding: 11px 14px !important;
+        font-size: 1rem !important;
+    }
+    /* Header modal compact hơn */
+    .modal-content header {
+        margin-bottom: 12px !important;
+    }
 }
 
 

@@ -605,11 +605,13 @@ function resetOcrModal() {
     const loading = document.getElementById('ocr-loading');
     const resultContainer = document.getElementById('ocr-result-container');
     const fileInput = document.getElementById('ocr-file-input');
+    const cameraInput = document.getElementById('ocr-camera-input');
 
     if (dropzone) dropzone.style.display = 'block';
     if (loading) loading.style.display = 'none';
     if (resultContainer) resultContainer.style.display = 'none';
     if (fileInput) fileInput.value = '';
+    if (cameraInput) cameraInput.value = '';
     currentOcrImageBase64 = null;
 }
 
@@ -619,6 +621,7 @@ function initOcrScanner() {
     const ocrModal = document.getElementById('ocr-modal');
     const ocrDropzone = document.getElementById('ocr-dropzone');
     const ocrFileInput = document.getElementById('ocr-file-input');
+    const ocrCameraInput = document.getElementById('ocr-camera-input');
     const ocrReuploadBtn = document.getElementById('ocr-reupload-btn');
     const ocrSaveBtn = document.getElementById('ocr-save-btn');
     const ocrCancelBtn = document.getElementById('ocr-cancel-btn');
@@ -628,14 +631,20 @@ function initOcrScanner() {
     if (quickOcrBtn) quickOcrBtn.onclick = openOcrModal;
 
     if (ocrDropzone && ocrFileInput) {
-        ocrDropzone.onclick = () => ocrFileInput.click();
+        // Click vào vùng dropzone → mở file picker
+        // Trên mobile, click vào label tự mở gallery
+        ocrDropzone.onclick = (e) => {
+            if (e.target.tagName === 'LABEL' || e.target.closest('label')) return;
+            ocrFileInput.click();
+        };
+
         ocrFileInput.onchange = (e) => {
             if (e.target.files && e.target.files[0]) {
                 processOcrFile(e.target.files[0]);
             }
         };
 
-        // Drag and drop support
+        // Drag and drop support (desktop)
         ocrDropzone.ondragover = (e) => {
             e.preventDefault();
             ocrDropzone.style.borderColor = '#2563eb';
