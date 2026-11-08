@@ -10,6 +10,7 @@ import '../styles/mobile.css';
 import confetti from 'canvas-confetti';
 import logoSrc from '../assets/logo.png';
 import qrCodeSrc from '../assets/qr-code.png';
+import lotusLogoSrc from '../assets/lotus-logo.png';
 
 const MobileApp = () => {
     const defaultItem = { productId: '', customName: '' };
@@ -82,6 +83,12 @@ const MobileApp = () => {
                     container.style.paddingTop = '20px';
                     container.style.paddingBottom = '30px';
                     container.style.backgroundColor = '#ffffff';
+
+                    // Show lotus logo for export
+                    const lotusLogo = clonedDoc.getElementById('export-lotus-logo');
+                    if (lotusLogo) {
+                        lotusLogo.style.opacity = '1';
+                    }
                 }
             });
 
@@ -140,7 +147,22 @@ const MobileApp = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                style={{ position: 'relative' }}
             >
+                {/* Lotus Logo for Export - Top Right */}
+                <img 
+                    src={lotusLogoSrc} 
+                    alt="Lotus Paint" 
+                    style={{ 
+                        position: 'absolute',
+                        top: '5mm',
+                        right: '5mm',
+                        width: '80px',
+                        height: 'auto',
+                        opacity: '0'
+                    }}
+                    id="export-lotus-logo"
+                />
                 <div className="m-section-title" style={{ marginTop: '10px', fontSize: scale.title, color: '#1e293b', fontWeight: '900' }}>
                     <ShoppingBag size={parseInt(scale.title)} /> BÁO GIÁ SƠN LOTUS
                 </div>
