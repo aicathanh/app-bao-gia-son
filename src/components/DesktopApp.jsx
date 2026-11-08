@@ -187,8 +187,8 @@ const DesktopApp = () => {
             basePrice = item.customPrice || 0;
         }
 
-        if (!includeVAT) {
-            return Math.round(basePrice / 1.08);
+        if (includeVAT) {
+            return Math.round(basePrice * 1.08);
         }
         return basePrice;
     };
@@ -370,7 +370,7 @@ const DesktopApp = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                Có VAT 8% (Giá Gốc)
+                                Có VAT 8%
                             </button>
                             <button
                                 type="button"
@@ -387,7 +387,7 @@ const DesktopApp = () => {
                                     transition: 'all 0.2s'
                                 }}
                             >
-                                Không VAT
+                                Không VAT (Giá Gốc)
                             </button>
                         </div>
                     </div>
@@ -546,7 +546,7 @@ const DesktopApp = () => {
                                                             value={item.customPrice ? formatCurrency(getPrice(item)).trim() : ''} 
                                                             onChange={(e) => {
                                                                 const val = parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0;
-                                                                const baseVal = includeVAT ? val : Math.round(val * 1.08);
+                                                                const baseVal = includeVAT ? Math.round(val / 1.08) : val;
                                                                 updateItem(item.id, 'customPrice', baseVal);
                                                             }} 
                                                             style={{ padding: 0 }}

@@ -241,21 +241,24 @@ const MobileApp = () => {
                                 }}>
                                     {Object.entries(selectedProduct.p_prices)
                                         .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
-                                        .map(([size, price]) => (
-                                        <div key={size} style={{ 
-                                            background: '#f8fafc', 
-                                            padding: '8px 4px', 
-                                            borderRadius: '8px', 
-                                            textAlign: 'center',
-                                            border: '1px solid #e2e8f0',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            justifyContent: 'center'
-                                        }}>
-                                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>{size}Kg</div>
-                                            <div style={{ fontSize: '13px', fontWeight: '900', color: '#2563eb', whiteSpace: 'nowrap' }}>{formatCurrency(price).replace('₫', '').trim()}</div>
-                                        </div>
-                                    ))}
+                                        .map(([size, price]) => {
+                                            const priceWithVAT = Math.round(price * 1.08);
+                                            return (
+                                                <div key={size} style={{ 
+                                                    background: '#f8fafc', 
+                                                    padding: '8px 4px', 
+                                                    borderRadius: '8px', 
+                                                    textAlign: 'center',
+                                                    border: '1px solid #e2e8f0',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>{size}Kg</div>
+                                                    <div style={{ fontSize: '13px', fontWeight: '900', color: '#2563eb', whiteSpace: 'nowrap' }}>{formatCurrency(priceWithVAT).replace('₫', '').trim()}</div>
+                                                </div>
+                                            );
+                                        })}
                                 </div>
                             )}
                         </motion.div>

@@ -485,6 +485,60 @@
         "0.5": 421200,
         "0.1": 91800
       }
+    },
+    {
+      "id": 157,
+      "name": "LOTUS ACRYLIC P3C PRIMER (SƠN LÓT)",
+      "p_prices": {
+        "1": 140000,
+        "5": 670000,
+        "20": 2600000
+      }
+    },
+    {
+      "id": 158,
+      "name": "LOTUS ACRYLIC P3C BASECOAT (SƠN MÀU)",
+      "p_prices": {
+        "1": 185000,
+        "5": 895000,
+        "20": 3500000
+      }
+    },
+    {
+      "id": 159,
+      "name": "LOTUS ACRYLIC P3C TOPCOAT (SƠN PHỦ)",
+      "p_prices": {
+        "1": 180000,
+        "5": 870000,
+        "20": 3400000
+      }
+    },
+    {
+      "id": 160,
+      "name": "LOTUS ACRYLIC P3C PRIMER PU 2K33 (SƠN LÓT 2K33)",
+      "p_prices": {
+        "1": 155000,
+        "5": 745000,
+        "20": 2900000
+      }
+    },
+    {
+      "id": 161,
+      "name": "LOTUS ACRYLIC P3C VARNISH PU 2K33 (SƠN PHỦ TRONG SUỐT 2K33)",
+      "p_prices": {
+        "1": 175000,
+        "5": 845000,
+        "20": 3300000
+      }
+    },
+    {
+      "id": 162,
+      "name": "LOTUS ACRYLIC P3C TOPCOAT PU 2K33 (SƠN PHỦ MÀU 2K33)",
+      "p_prices": {
+        "1": 215000,
+        "5": 1045000,
+        "20": 4100000
+      }
     }
   ]
 }
