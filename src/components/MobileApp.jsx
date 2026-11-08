@@ -9,6 +9,7 @@ import { exportToPDF } from '../utils/pdfGenerator';
 import '../styles/mobile.css';
 import confetti from 'canvas-confetti';
 import logoSrc from '../assets/logo.png';
+import qrCodeSrc from '../assets/qr-code.png';
 
 const MobileApp = () => {
     const defaultItem = { productId: '', customName: '' };
@@ -247,16 +248,26 @@ const MobileApp = () => {
                 {/* Footer only for Export Image */}
                 <div id="export-only-footer" style={{ 
                     display: 'none', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    padding: '15px', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-end',
+                    padding: '15px 15px 5px 15px', 
                     borderTop: '1px dashed #cbd5e0', 
                     marginTop: '20px',
                     color: '#64748b',
                     fontSize: '11px',
                     fontWeight: 'bold'
                 }}>
-                    Hotline: 0943 966 662 | www.sonlotus.vn
+                    <div>Hotline: 0943 966 662 | www.sonlotus.vn</div>
+                    <img 
+                        src={qrCodeSrc} 
+                        alt="QR Code" 
+                        style={{ 
+                            width: '60px', 
+                            height: '60px', 
+                            opacity: '0.25',
+                            filter: 'grayscale(40%) brightness(150%)'
+                        }} 
+                    />
                 </div>
             </motion.div>
 
