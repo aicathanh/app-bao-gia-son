@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Download, Printer, Save, Search, X, User, MapPin, Phone, FileText, ShoppingBag, Package, ChevronRight, Tags, Share2, ImageIcon, Camera, QrCode } from 'lucide-react';
+import { Plus, Trash2, Download, Printer, Save, Search, X, User, MapPin, Phone, FileText, ShoppingBag, Package, ChevronRight, Tags, Share2, ImageIcon, Camera, QrCode, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import html2canvas from 'html2canvas';
 import productData from '../data/products.json';
@@ -13,13 +13,14 @@ import qrCodeSrc from '../assets/qr-code.png';
 import lotusLogoSrc from '../assets/lotus-logo.png';
 
 const MobileApp = () => {
-    const defaultItem = { productId: '', customName: '' };
+    const defaultItem = { productId: '', customName: '', quantities: { '1': 0, '5': 0, '20': 0 } };
     const products = productData.products;
 
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
     const [searchQuery, setSearchQuery] = useState({});
     const [modalImage, setModalImage] = useState(null);
+    const [isQuickQuote, setIsQuickQuote] = useState(false);
 
     // Dynamic scale based on item count
     const getScaleStyle = () => {
@@ -46,6 +47,21 @@ const MobileApp = () => {
 
     const formatCurrency = (num) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(num);
 
+    const getItemTotal = (item) => {
+        const product = products.find(p => p.id === parseInt(item.productId));
+        if (!product) return 0;
+        let total = 0;
+        Object.entries(item.quantities || {}).forEach(([size, qty]) => {
+            const price = product.p_prices[size] || 0;
+            total += Math.round(price * 1.08) * qty;
+        });
+        return total;
+    };
+
+    const getGrandTotal = () => {
+        return items.reduce((sum, item) => sum + getItemTotal(item), 0);
+    };
+
     const handleSearch = (itemId, query) => {
         setSearchQuery({ ...searchQuery, [itemId]: query });
     };
@@ -56,7 +72,10 @@ const MobileApp = () => {
     };
 
     const selectProduct = (itemId, product) => {
-        updateItem(itemId, { productId: product.id, customName: product.name });
+        const sizes = Object.keys(product.p_prices).sort((a, b) => parseFloat(a) - parseFloat(b));
+        const quantities = {};
+        sizes.forEach(size => quantities[size] = 0);
+        updateItem(itemId, { productId: product.id, customName: product.name, quantities });
         setSearchQuery({ ...searchQuery, [itemId]: '' });
     };
 
@@ -76,7 +95,7 @@ const MobileApp = () => {
                 onclone: (clonedDoc) => {
                     const clonedNoExports = clonedDoc.querySelectorAll('.no-export');
                     clonedNoExports.forEach(el => el.style.display = 'none');
-                    
+
                     const container = clonedDoc.getElementById('mobile-container');
                     container.style.width = '420px';
                     container.style.padding = '25px';
@@ -88,6 +107,46 @@ const MobileApp = () => {
                     const lotusLogo = clonedDoc.getElementById('export-lotus-logo');
                     if (lotusLogo) {
                         lotusLogo.style.opacity = '1';
+                    }
+
+                    // Add quantity and selected size info for export (only in Quick Quote mode)
+                    if (isQuickQuote) {
+                        const itemCards = clonedDoc.querySelectorAll('.m-item-card');
+                        itemCards.forEach((card, index) => {
+                            const originalItem = items[index];
+                            if (originalItem && originalItem.productId) {
+                                const product = products.find(p => p.id === parseInt(originalItem.productId));
+                                if (product) {
+                                    const quantities = originalItem.quantities || {};
+                                    const sizesWithQty = Object.entries(quantities).filter(([size, qty]) => qty > 0);
+
+                                    if (sizesWithQty.length > 0) {
+                                        const infoDiv = clonedDoc.createElement('div');
+                                        infoDiv.style.cssText = 'margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0;';
+
+                                        let html = '';
+                                        sizesWithQty.forEach(([size, qty]) => {
+                                            const price = product.p_prices[size] || 0;
+                                            const priceWithVAT = Math.round(price * 1.08);
+                                            const lineTotal = priceWithVAT * qty;
+                                            html += `
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                    <div style="font-size: 12px; color: #64748b; font-weight: bold;">
+                                                        ${size}Kg x ${qty}
+                                                    </div>
+                                                    <div style="font-size: 13px; font-weight: 900; color: #16a34a;">
+                                                        ${new Intl.NumberFormat('vi-VN').format(lineTotal)} đ
+                                                    </div>
+                                                </div>
+                                            `;
+                                        });
+
+                                        infoDiv.innerHTML = html;
+                                        card.appendChild(infoDiv);
+                                    }
+                                }
+                            }
+                        });
                     }
                 }
             });
@@ -167,6 +226,44 @@ const MobileApp = () => {
                     <ShoppingBag size={parseInt(scale.title)} /> BÁO GIÁ SƠN LOTUS
                 </div>
 
+                {/* Mode Toggle */}
+                <div className="no-export" style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
+                    <button
+                        onClick={() => setIsQuickQuote(false)}
+                        style={{
+                            flex: 1,
+                            padding: '10px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            background: !isQuickQuote ? '#2563eb' : '#f1f5f9',
+                            color: !isQuickQuote ? 'white' : '#64748b',
+                            fontWeight: 'bold',
+                            fontSize: '13px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <FileText size={16} style={{ marginRight: '6px', display: 'inline', verticalAlign: 'middle' }} />
+                        Báo Giá Chi Tiết
+                    </button>
+                    <button
+                        onClick={() => setIsQuickQuote(true)}
+                        style={{
+                            flex: 1,
+                            padding: '10px',
+                            borderRadius: '10px',
+                            border: 'none',
+                            background: isQuickQuote ? '#16a34a' : '#f1f5f9',
+                            color: isQuickQuote ? 'white' : '#64748b',
+                            fontWeight: 'bold',
+                            fontSize: '13px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        <Zap size={16} style={{ marginRight: '6px', display: 'inline', verticalAlign: 'middle' }} />
+                        Báo Nhanh
+                    </button>
+                </div>
+
                 <AnimatePresence>
                     {items.map((item, index) => {
                     const selectedProduct = products.find(p => p.id === parseInt(item.productId));
@@ -222,10 +319,10 @@ const MobileApp = () => {
 
                             {/* Static Product Name */}
                             {!query && productName && (
-                                <div className="p-name-static" style={{ 
-                                    fontWeight: '800', 
-                                    fontSize: scale.name, 
-                                    color: '#1A365D', 
+                                <div className="p-name-static" style={{
+                                    fontWeight: '800',
+                                    fontSize: scale.name,
+                                    color: '#1A365D',
                                     marginBottom: '10px',
                                     lineHeight: '1.3'
                                 }}>
@@ -233,21 +330,21 @@ const MobileApp = () => {
                                 </div>
                             )}
 
-                            {selectedProduct && (
-                                <div className="m-price-grid" style={{ 
-                                    display: 'grid', 
-                                    gridTemplateColumns: 'repeat(3, 1fr)', 
-                                    gap: '8px' 
+                            {selectedProduct && !isQuickQuote && (
+                                <div className="m-price-grid" style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(3, 1fr)',
+                                    gap: '8px'
                                 }}>
                                     {Object.entries(selectedProduct.p_prices)
                                         .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
                                         .map(([size, price]) => {
                                             const priceWithVAT = Math.round(price * 1.08);
                                             return (
-                                                <div key={size} style={{ 
-                                                    background: '#f8fafc', 
-                                                    padding: '8px 4px', 
-                                                    borderRadius: '8px', 
+                                                <div key={size} style={{
+                                                    background: '#f8fafc',
+                                                    padding: '8px 4px',
+                                                    borderRadius: '8px',
                                                     textAlign: 'center',
                                                     border: '1px solid #e2e8f0',
                                                     display: 'flex',
@@ -261,6 +358,60 @@ const MobileApp = () => {
                                         })}
                                 </div>
                             )}
+
+                            {selectedProduct && isQuickQuote && (
+                                <>
+                                    {/* Size & Quantity Grid */}
+                                    <div className="no-export" style={{ marginBottom: '10px' }}>
+                                        <label style={{ fontSize: '10px', color: '#64748b', fontWeight: 'bold' }}>NHẬP SỐ LƯỢNG THEO QUY CÁCH:</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '6px' }}>
+                                            {Object.entries(selectedProduct.p_prices)
+                                                .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+                                                .map(([size, price]) => {
+                                                    const qty = item.quantities?.[size] || 0;
+                                                    const priceWithVAT = Math.round(price * 1.08);
+                                                    const lineTotal = priceWithVAT * qty;
+                                                    return (
+                                                        <div key={size} style={{
+                                                            background: '#f8fafc',
+                                                            padding: '8px',
+                                                            borderRadius: '8px',
+                                                            border: qty > 0 ? '2px solid #16a34a' : '1px solid #e2e8f0',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            gap: '4px'
+                                                        }}>
+                                                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', textAlign: 'center' }}>{size}Kg</div>
+                                                            <input
+                                                                type="number"
+                                                                value={qty}
+                                                                onChange={(e) => {
+                                                                    const newQuantities = { ...item.quantities, [size]: parseInt(e.target.value) || 0 };
+                                                                    updateItem(item.id, 'quantities', newQuantities);
+                                                                }}
+                                                                min="0"
+                                                                style={{
+                                                                    width: '100%',
+                                                                    padding: '6px',
+                                                                    borderRadius: '6px',
+                                                                    border: '1px solid #cbd5e1',
+                                                                    fontSize: '14px',
+                                                                    fontWeight: 'bold',
+                                                                    textAlign: 'center'
+                                                                }}
+                                                            />
+                                                            {qty > 0 && (
+                                                                <div style={{ fontSize: '12px', fontWeight: '900', color: '#16a34a', textAlign: 'center' }}>
+                                                                    {formatCurrency(lineTotal).replace('₫', '').trim()}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </motion.div>
                     );
                 })}
@@ -269,6 +420,24 @@ const MobileApp = () => {
                 <button className="m-btn-add no-export" onClick={addItem} style={{ borderStyle: 'solid', background: '#eff6ff', padding: '10px', fontSize: '13px' }}>
                     <Plus size={16} /> Thêm loại sơn khác
                 </button>
+
+                {/* Grand Total Summary - Only in Quick Quote Mode */}
+                {isQuickQuote && items.some(item => item.productId) && (
+                    <div style={{
+                        marginTop: '20px',
+                        padding: '15px',
+                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                        borderRadius: '12px',
+                        border: '2px solid #bbf7d0'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '14px', fontWeight: '800', color: '#166534' }}>TỔNG THÀNH TIỀN:</span>
+                            <span style={{ fontSize: '20px', fontWeight: '900', color: '#166534' }}>
+                                {formatCurrency(getGrandTotal()).replace('₫', '').trim()}
+                            </span>
+                        </div>
+                    </div>
+                )}
 
                 {/* Footer only for Export Image */}
                 <div id="export-only-footer" style={{ 
