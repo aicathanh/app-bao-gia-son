@@ -920,7 +920,7 @@ async function extractWithGemini(base64Image, mimeType, apiKey) {
     `3. "customer_phone": Số điện thoại của khách hàng (ở mục SĐT).\n` +
     `4. "amount": Là tổng số tiền thanh toán cuối cùng (dạng số nguyên integer không dấu chấm, ví dụ 15000000).\n`;
 
-    const models = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash-exp'];
+    const models = ['gemini-1.5-flash', 'gemini-1.5-pro'];
     let lastError = null;
 
     for (let model of models) {
