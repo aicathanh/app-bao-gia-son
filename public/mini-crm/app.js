@@ -820,7 +820,9 @@ async function processOcrFile(file) {
             } catch (err) {
                 console.error('Gemini extraction failed:', err);
                 geminiErrorMsg = err.message || 'Lỗi kết nối Gemini API';
-                if (statusText) statusText.innerText = `Gemini báo lỗi (${geminiErrorMsg}). Đang chuyển sang Tesseract OCR...`;
+                if (statusText) statusText.innerText = `Gemini gặp lỗi, đang tự động chuyển sang Tesseract OCR...`;
+                // Auto-set parsedData = null để fallback về Tesseract
+                parsedData = null;
             }
         }
 
@@ -950,6 +952,7 @@ async function extractWithGemini(base64Image, mimeType, apiKey) {
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 const errMsg = errData.error?.message || `HTTP ${res.status}`;
+                console.error(`Gemini ${model} error:`, errData);
                 throw new Error(errMsg);
             }
 
@@ -972,6 +975,8 @@ async function extractWithGemini(base64Image, mimeType, apiKey) {
             console.warn(`Model ${model} error:`, e.message);
         }
     }
+    // Fallback tự động về Tesseract nếu Gemini lỗi
+    console.warn('Gemini failed, falling back to Tesseract OCR');
     throw lastError || new Error('Không thể kết nối Gemini API');
 }
 
@@ -992,8 +997,11 @@ async function extractWithTesseract(imageSource, onProgress) {
 
     // Điều chỉnh tham số để đọc tiếng Việt tốt hơn
     await worker.setParameters({
-        tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơÀÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơ,./-(): ',
+        // Không dùng whitelist để Tesseract tự học pattern tiếng Việt
+        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
         preserve_interword_spaces: '1',
+        textord_heavy_nr: '1',
+        textord_noise_removal: '1',
     });
 
     const ret = await worker.recognize(preprocessedImage);
@@ -1012,8 +1020,8 @@ async function preprocessImage(imageSource) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Tăng kích thước ảnh 2x để OCR đọc được font nhỏ
-            const scale = 2;
+            // Tăng kích thước ảnh 3x để OCR đọc được font nhỏ
+            const scale = 3;
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
 
@@ -1033,14 +1041,15 @@ async function preprocessImage(imageSource) {
 
             ctx.putImageData(imageData, 0, 0);
 
-            // Tăng contrast (thresholding nhẹ)
+            // Tăng contrast mạnh hơn với adaptive threshold
             const processedData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pData = processedData.data;
-            const threshold = 140;
 
+            // Adaptive thresholding
             for (let i = 0; i < pData.length; i += 4) {
                 const gray = pData[i];
-                const value = gray > threshold ? 255 : 0;
+                // Threshold cao hơn để text trắng nền đen rõ hơn
+                const value = gray > 160 ? 255 : (gray < 80 ? 0 : gray);
                 pData[i] = value;
                 pData[i + 1] = value;
                 pData[i + 2] = value;
