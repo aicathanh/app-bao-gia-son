@@ -1274,81 +1274,82 @@ function parseInvoiceText(text, rawLines) {
     let amount = 0;
     let products = '';
 
-    // 1. TÊN KHÁCH HÀNG - Ưu tiên tên công ty (IN HOA)
-    const companyNamePatterns = [
-        /(?:CÔNG TY|HỌ VÀ TÊN|TÊN CÔNG TY|TÊN ĐƠN VỊ)[:\s]+([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&\.()-]+?)(?=\n|Địa chỉ|SĐT|Mã số thuế|—Chi nhánh|–Chi nhánh|-Chi nhánh|$)/i,
-        /(?:CÔNG TY|HỌ VÀ TÊN)\s+([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&.]{10,})/i
+    console.log('=== Invoice OCR Debug ===');
+    console.log('Raw lines (first 20):', rawLines.slice(0, 20).join('\n'));
+
+    // 1. TÊN KHÁCH HÀNG - Nhiều pattern fallback
+    const namePatterns = [
+        // Pattern 1: "CÔNG TY XYZ" hoặc "HỌ VÀ TÊN XYZ"
+        /(?:CÔNG TY|HỌ VÀ TÊN|TÊN CÔNG TY|TÊN ĐƠN VỊ|TÊN ĐƠN VỊ HỌP)[:\s\n]+([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&\.\-\(\)]{8,50}?)(?=\n|Địa chỉ|SĐT|Mã số thuế|MST|—Chi nhánh|–Chi nhánh|-Chi nhánh|$)/i,
+        // Pattern 2: "CÔNG TY" theo sau là dòng tên
+        /CÔNG TY\s*[:\-\s]*\n([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&\.\-]{8,50})/i,
+        // Pattern 3: Tìm dòng IN HOA dài
+        /^[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&\.\-]{10,50}$/gm,
+        // Pattern 4: Tìm dòng có chữ "CÔNG TY" hoặc "TNHH"
+        /[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&\.\-]*CÔNG TY[A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&\.\-]*/i,
+        // Pattern 5: "KHÁCH HÀNG:"
+        /(?:KHÁCH HÀNG|NGƯỜI MUA|HỌ VÀ TÊN)[:\s\n]+([^\n]{3,50})/i
     ];
 
-    for (let pattern of companyNamePatterns) {
-        const match = text.match(pattern);
-        if (match && match[1]) {
-            customer_name = match[1].trim();
-            // Clean chi nhánh
-            customer_name = customer_name.split(/—Chi nhánh|–Chi nhánh|-Chi nhánh|Địa chỉ|SĐT|Điện thoại/i)[0].trim();
-            if (customer_name.length > 5) break;
-        }
-    }
-
-    // Nếu không tìm được công ty, tìm tên khách hàng cá nhân
-    if (!customer_name) {
-        const personalNamePatterns = [
-            /(?:KHÁCH HÀNG|NGƯỜI MUA|HỌ VÀ TÊN)[:\s]+([^\n]+?)(?=\n|Địa chỉ|SĐT|Mã số thuế|$)/i,
-            /(?:KHÁCH HÀNG|NGƯỜI MUA)\s+([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s]+?)(?=\n|Địa chỉ|SĐT|$)/i
-        ];
-
-        for (let pattern of personalNamePatterns) {
-            const match = text.match(pattern);
-            if (match && match[1]) {
-                customer_name = match[1].trim();
-                if (customer_name.length > 3) break;
+    for (let pattern of namePatterns) {
+        const matches = text.matchAll(pattern);
+        for (let match of matches) {
+            if (match[1]) {
+                let name = match[1].trim();
+                // Clean
+                name = name.split(/—Chi nhánh|–Chi nhánh|-Chi nhánh|Địa chỉ|SĐT|Điện thoại|Phone|TEL|Mã số thuế|MST/i)[0].trim();
+                name = name.replace(/^[.\s_:\-–—,]+|[.\s_:\-–—,]+$/g, '').trim();
+                if (name.length > 5 && name.length < 100) {
+                    customer_name = name;
+                    console.log('Found customer name:', customer_name);
+                    break;
+                }
             }
         }
+        if (customer_name) break;
     }
 
-    // 2. TỔNG THANH TOÁN - Tìm chính xác nhất
-    // Ưu tiên 1: Tìm "Tổng thanh toán" gần cuối file
+    // 2. TỔNG THANH TOÁN - Nhiều pattern fallback
     const totalPatterns = [
-        /(?:TỔNG\s*THANH\s*TOÁN|TỔNG\s*CỘNG|TỔNG\s*TIỀN|TỔNG\s*SỐ\s*TIỀN)[:\s]*([0-9.,\s]+)(?=\s*đ| Đồng|$)/i,
-        /(?:Tổng\s*thanh\s*toán|Tổng\s*cộng|Tổng\s*tiền)[:\s]*([0-9.,\s]+)/i
+        // Pattern 1: "TỔNG THANH TOÁN: xxx"
+        /(?:TỔNG\s*THANH\s*TOÁN|TỔNG\s*THANH\s*TOÁN)[:\s]*([0-9.,\s]+)(?=\s*đ| Đồng|$)/i,
+        // Pattern 2: "TỔNG CỘNG: xxx"
+        /(?:TỔNG\s*CỘNG|TỔNG\s*CỘNG)[:\s]*([0-9.,\s]+)(?=\s*đ| Đồng|$)/i,
+        // Pattern 3: "TỔNG TIỀN: xxx"
+        /(?:TỔNG\s*TIỀN|TỔNG\s*TIỀN)[:\s]*([0-9.,\s]+)(?=\s*đ| Đồng|$)/i,
+        // Pattern 4: "TỔNG SỐ TIỀN: xxx"
+        /(?:TỔNG\s*SỐ\s*TIỀN|TỔNG\s*SỐ\s*TIỀN)[:\s]*([0-9.,\s]+)(?=\s*đ| Đồng|$)/i,
+        // Pattern 5: Không có chữ "TỔNG", chỉ số lớn ở cuối
+        /([0-9]{1,3}(?:[.,][0-9]{3}){1,3})\s*(?:đ|Đồng|VNĐ)/i
     ];
 
-    // Tìm từ cuối file đi lên (TỔNG thường ở cuối)
-    for (let i = rawLines.length - 1; i >= 0; i--) {
+    // Tìm từ cuối file đi lên
+    for (let i = rawLines.length - 1; i >= Math.max(0, rawLines.length - 20); i--) {
         const line = rawLines[i];
         for (let pattern of totalPatterns) {
             const match = line.match(pattern);
             if (match && match[1]) {
-                amount = parseInt(match[1].replace(/[^0-9]/g, ''), 10) || 0;
-                if (amount >= 10000) break; // Số tiền hợp lý
+                const num = parseInt(match[1].replace(/[^0-9]/g, ''), 10) || 0;
+                if (num >= 10000 && num < 10000000000) {
+                    amount = num;
+                    console.log('Found total from line:', line, 'Amount:', amount);
+                    break;
+                }
             }
         }
         if (amount >= 10000) break;
     }
 
-    // Ưu tiên 2: Tìm "Tổng cộng tiền hàng" + VAT
+    // Fallback: Tìm tất cả số lớn trong file
     if (amount < 10000) {
-        const goodsTotalMatch = text.match(/(?:TỔNG\s*CỘNG\s*TIỀN\s*HÀNG|TỔNG\s*TIỀN\s*HÀNG)[:\s]*([0-9.,\s]+)/i);
-        const vatMatch = text.match(/(?:THUẸ\s*GTGT|VAT|THUẸ)[:\s]*([0-9.,\s]+)/i);
+        const allNumbers = [...text.matchAll(/([0-9]{1,3}(?:[.,][0-9]{3}){1,3})/g)]
+            .map(m => parseInt(m[1].replace(/[^0-9]/g, ''), 10))
+            .filter(n => n >= 100000 && n < 10000000000);
 
-        if (goodsTotalMatch && vatMatch) {
-            const goods = parseInt(goodsTotalMatch[1].replace(/[^0-9]/g, ''), 10) || 0;
-            const vat = parseInt(vatMatch[1].replace(/[^0-9]/g, ''), 10) || 0;
-            amount = goods + vat;
-        }
-    }
-
-    // Ưu tiên 3: Tìm số lớn nhất trong các dòng có chữ "Tổng" hoặc cuối file
-    if (amount < 10000) {
-        const totalLines = rawLines.filter(l => /TỔNG|CỘNG|THANH TOÁN|TỔNG SỐ/i.test(l));
-        if (totalLines.length > 0) {
-            const candidates = totalLines.flatMap(l =>
-                [...l.matchAll(/([0-9]{1,3}(?:[.,][0-9]{3}){1,3})/g)]
-                    .map(m => parseInt(m[1].replace(/[^0-9]/g, ''), 10))
-            ).filter(n => n >= 100000);
-            if (candidates.length > 0) {
-                amount = Math.max(...candidates);
-            }
+        if (allNumbers.length > 0) {
+            // Lấy số lớn nhất
+            amount = Math.max(...allNumbers);
+            console.log('Fallback - found max amount:', amount);
         }
     }
 
@@ -1377,6 +1378,8 @@ function parseInvoiceText(text, rawLines) {
     if (invoiceNoMatch) {
         quote_no = invoiceNoMatch[1].trim();
     }
+
+    console.log('Final extracted:', { customer_name, amount });
 
     return {
         customer_name,
