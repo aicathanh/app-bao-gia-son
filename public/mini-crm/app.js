@@ -985,8 +985,11 @@ async function extractWithTesseract(imageSource, onProgress) {
         throw new Error('Thư viện Tesseract OCR chưa tải xong, vui lòng kiểm tra kết nối mạng!');
     }
 
-    // Preprocess image để cải thiện OCR cho font tiếng Việt
-    const preprocessedImage = await preprocessImage(imageSource);
+    // Phát hiện loại ảnh và áp dụng preprocessing phù hợp
+    const imageType = await detectImageType(imageSource);
+    console.log('Detected image type:', imageType);
+
+    const preprocessedImage = await preprocessImage(imageSource, imageType);
 
     const worker = await Tesseract.createWorker('vie+eng');
     if (onProgress) {
@@ -995,24 +998,66 @@ async function extractWithTesseract(imageSource, onProgress) {
         });
     }
 
-    // Điều chỉnh tham số để đọc tiếng Việt tốt hơn
-    await worker.setParameters({
-        // Không dùng whitelist để Tesseract tự học pattern tiếng Việt
-        tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-        preserve_interword_spaces: '1',
-        textord_heavy_nr: '1',
-        textord_noise_removal: '1',
-    });
+    // Điều chỉnh tham số tùy theo loại ảnh
+    if (imageType === 'invoice') {
+        await worker.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            preserve_interword_spaces: '1',
+            textord_heavy_nr: '1',
+            textord_noise_removal: '1',
+            tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơ,./-(): %/.',
+        });
+    } else {
+        await worker.setParameters({
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            preserve_interword_spaces: '1',
+            textord_heavy_nr: '1',
+            textord_noise_removal: '1',
+        });
+    }
 
     const ret = await worker.recognize(preprocessedImage);
     await worker.terminate();
 
     const rawText = ret.data?.text || '';
-    return parseQuotationText(rawText);
+    return parseQuotationText(rawText, imageType);
 }
 
-// Preprocess ảnh để cải thiện OCR
-async function preprocessImage(imageSource) {
+// Phát hiện loại ảnh: báo giá hay hóa đơn
+async function detectImageType(imageSource) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Chuyển sang grayscale để detect text
+            let grayscale = '';
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                grayscale += avg > 128 ? '1' : '0';
+            }
+
+            // Tìm từ khóa đặc trưng của hóa đơn
+            const invoiceKeywords = ['HÓA ĐƠN', 'INVOICE', 'MẪU SỐ', 'KÝ HIỆU', 'MÃ SỐ THUẾ', 'NGÀY THÁNG NĂM'];
+            const hasInvoiceKeyword = invoiceKeywords.some(keyword => grayscale.includes(keyword));
+
+            resolve(hasInvoiceKeyword ? 'invoice' : 'quotation');
+        };
+        img.onerror = () => resolve('quotation'); // Mặc định là báo giá
+        img.src = imageSource;
+    });
+}
+
+// Preprocess ảnh tùy theo loại
+async function preprocessImage(imageSource, imageType = 'quotation') {
     return new Promise((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -1020,36 +1065,36 @@ async function preprocessImage(imageSource) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Tăng kích thước ảnh 3x để OCR đọc được font nhỏ
-            const scale = 3;
+            // Hóa đơn cần scale cao hơn vì font nhỏ hơn
+            const scale = imageType === 'invoice' ? 4 : 3;
             canvas.width = img.width * scale;
             canvas.height = img.height * scale;
 
-            // Vẽ ảnh đã scale
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            // Chuyển sang grayscale
+            // Grayscale
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
 
             for (let i = 0; i < data.length; i += 4) {
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                data[i] = avg;     // R
-                data[i + 1] = avg; // G
-                data[i + 2] = avg; // B
+                data[i] = avg;
+                data[i + 1] = avg;
+                data[i + 2] = avg;
             }
 
             ctx.putImageData(imageData, 0, 0);
 
-            // Tăng contrast mạnh hơn với adaptive threshold
+            // Contrast enhancement
             const processedData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const pData = processedData.data;
 
-            // Adaptive thresholding
+            // Threshold khác nhau cho từng loại
+            const threshold = imageType === 'invoice' ? 150 : 160;
+
             for (let i = 0; i < pData.length; i += 4) {
                 const gray = pData[i];
-                // Threshold cao hơn để text trắng nền đen rõ hơn
-                const value = gray > 160 ? 255 : (gray < 80 ? 0 : gray);
+                const value = gray > threshold ? 255 : (gray < threshold - 40 ? 0 : gray);
                 pData[i] = value;
                 pData[i + 1] = value;
                 pData[i + 2] = value;
@@ -1059,12 +1104,12 @@ async function preprocessImage(imageSource) {
 
             resolve(canvas.toDataURL('image/png'));
         };
-        img.onerror = () => resolve(imageSource); // Nếu lỗi thì dùng ảnh gốc
+        img.onerror = () => resolve(imageSource);
         img.src = imageSource;
     });
 }
 
-function parseQuotationText(text) {
+function parseQuotationText(text, imageType = 'quotation') {
     let customer_name = '';
     let customer_phone = '';
     let customer_address = '';
@@ -1073,6 +1118,11 @@ function parseQuotationText(text) {
     let products = '';
 
     const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+    // Nếu là hóa đơn, dùng parser riêng
+    if (imageType === 'invoice') {
+        return parseInvoiceText(text, rawLines);
+    }
 
     // 1. TÊN KHÁCH HÀNG: Chỉ lấy trên dòng TÊN KHÁCH HÀNG hoặc trước nhãn ĐỊA CHỈ
     const nameLabelRegex = /(?:TÊN\s*KHÁCH\s*HÀNG|TEN\s*KHACH\s*HANG|TÊN\s*KHÁCH|TEN\s*KHACH|KHÁCH\s*HÀNG|KHACH\s*HANG|TÊN\s*KH|TEN\s*KH)/i;
@@ -1177,6 +1227,105 @@ function parseQuotationText(text) {
         }
     }
     products = productLines.slice(0, 10).join('; ') || 'Báo giá từ ảnh chụp';
+
+    return {
+        customer_name,
+        customer_phone,
+        customer_address,
+        quote_no,
+        amount,
+        products
+    };
+}
+
+// Parser riêng cho hóa đơn
+function parseInvoiceText(text, rawLines) {
+    let customer_name = '';
+    let customer_phone = '';
+    let customer_address = '';
+    let quote_no = '';
+    let amount = 0;
+    let products = '';
+
+    // 1. TÊN KHÁCH HÀNG trong hóa đơn (thường ở phần trên)
+    const invoiceKeywords = ['CÔNG TY', 'HỌ VÀ TÊN', 'KHÁCH HÀNG', 'NGƯỜI MUA'];
+    const namePatterns = [
+        /(?:CÔNG TY|HỌ VÀ TÊN|KHÁCH HÀNG|NGƯỜI MUA)[:\s]+([^\n]+?)(?=\n|Địa chỉ|SĐT|$)/i,
+        /(?:CÔNG TY|HỌ VÀ TÊN|KHÁCH HÀNG|NGƯỜI MUA)\s+([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ\s&.]+)/i
+    ];
+
+    for (let pattern of namePatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+            customer_name = match[1].trim();
+            // Clean excess text
+            customer_name = customer_name.replace(/—Chi nhánh|–Chi nhánh|-Chi nhánh|Địa chỉ|SĐT|Điện thoại|Phone|TEL/i, '').trim();
+            if (customer_name.length > 3) break;
+        }
+    }
+
+    // 2. ĐỊA CHỈ
+    const addrPatterns = [
+        /(?:Địa chỉ|ĐỊA CHỈ|Đ\/C)[:\s]+([^\n]+?)(?=\n|SĐT|Điện thoại|Phone|TEL|Mã số thuế|MST|$)/i,
+        /(?:Địa chỉ|ĐỊA CHỈ|Đ\/C)\s+([A-ZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠ0-9\s,.\-\/]+)/i
+    ];
+
+    for (let pattern of addrPatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+            customer_address = match[1].trim();
+            if (customer_address.length > 5) break;
+        }
+    }
+
+    // 3. SĐT
+    const phoneMatch = text.match(/(?:SĐT|ĐIỆN THOẠI|PHONE|TEL|Tel)[:\s]+([0-9\s.]{9,15})/i) || text.match(/\b(0[3|5|7|8|9][0-9]{8})\b/);
+    if (phoneMatch) {
+        customer_phone = phoneMatch[1].replace(/[^0-9]/g, '');
+    }
+
+    // 4. MÃ SỐ HÓA ĐƠN / SỐ HÓA ĐƠN
+    const invoiceNoMatch = text.match(/(?:Mã số|Số|Ký hiệu)\s*(?:hóa đơn|HD)[:\s]*([0-9A-Z\/\-_]+)/i);
+    if (invoiceNoMatch) {
+        quote_no = invoiceNoMatch[1].trim();
+    }
+
+    // 5. TỔNG THANH TOÁN (Tìm chữ "Tổng thanh toán" hoặc "Tổng cộng" ở cuối)
+    const totalPatterns = [
+        /(?:TỔNG\s*THANH\s*TOÁN|TỔNG\s*CỘNG|TỔNG\s*TIỀN)[:\s]*([0-9.,\s]+)/i,
+        /(?:Tổng\s*thanh\s*toán|Tổng\s*cộng)[:\s]*([0-9.,\s]+)/i
+    ];
+
+    for (let pattern of totalPatterns) {
+        const match = text.match(pattern);
+        if (match && match[1]) {
+            amount = parseInt(match[1].replace(/[^0-9]/g, ''), 10) || 0;
+            if (amount >= 1000) break;
+        }
+    }
+
+    // Nếu không tìm được, tìm số lớn nhất trong text
+    if (amount < 1000) {
+        const candidates = [...text.matchAll(/([0-9]{1,3}(?:[.,][0-9]{3}){1,3})/g)]
+            .map(m => parseInt(m[1].replace(/[^0-9]/g, ''), 10))
+            .filter(n => n >= 100000);
+        if (candidates.length > 0) {
+            amount = Math.max(...candidates);
+        }
+    }
+
+    // 6. Sản phẩm (Tìm từ khóa "Danh sách sản phẩm" hoặc bảng sau header)
+    const productBlockStart = text.search(/(?:DANH SÁCH SẢN PHẨM|TÊN HÀNG|HÀNG HÓA|CỘNG|STT)/i);
+    const productBlockEnd = text.search(/(?:TỔNG\s*THANH\s*TOÁN|TỔNG\s*CỘNG|CỘNG\s*TIỀN|VAT|THUẸ)/i);
+
+    if (productBlockStart !== -1 && productBlockEnd !== -1 && productBlockEnd > productBlockStart) {
+        const productText = text.slice(productBlockStart, productBlockEnd);
+        products = productText
+            .split(/\n/)
+            .map(l => l.trim())
+            .filter(l => l.length > 5 && !/STT|Tên|Quy cách|Đơn vị|Số lượng|Đơn giá|Thành tiền/i.test(l))
+            .join('\n');
+    }
 
     return {
         customer_name,
