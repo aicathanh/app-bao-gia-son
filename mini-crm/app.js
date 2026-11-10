@@ -994,11 +994,6 @@ async function extractWithTesseract(imageSource, onProgress) {
     const preprocessedImage = await preprocessImage(imageSource, imageType);
 
     const worker = await Tesseract.createWorker('vie+eng');
-    if (onProgress) {
-        worker.setParameters({
-            logger: onProgress
-        });
-    }
 
     // Điều chỉnh tham số tùy theo loại ảnh
     if (imageType === 'invoice') {
@@ -1015,6 +1010,21 @@ async function extractWithTesseract(imageSource, onProgress) {
             preserve_interword_spaces: '1',
             textord_heavy_nr: '1',
             textord_noise_removal: '1',
+        });
+    }
+
+    // Setup logger an toàn - không truyền function trực tiếp
+    if (onProgress) {
+        worker.setParameters({
+            logger: (m) => {
+                if (typeof onProgress === 'function') {
+                    try {
+                        onProgress(m);
+                    } catch (e) {
+                        // Ignore logger errors
+                    }
+                }
+            }
         });
     }
 
