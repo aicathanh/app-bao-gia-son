@@ -980,6 +980,9 @@ async function extractWithTesseract(imageSource, onProgress) {
         throw new Error('Thư viện Tesseract OCR chưa tải xong, vui lòng kiểm tra kết nối mạng!');
     }
 
+    // Preprocess image để cải thiện OCR cho font tiếng Việt
+    const preprocessedImage = await preprocessImage(imageSource);
+
     const worker = await Tesseract.createWorker('vie+eng');
     if (onProgress) {
         worker.setParameters({
@@ -987,11 +990,69 @@ async function extractWithTesseract(imageSource, onProgress) {
         });
     }
 
-    const ret = await worker.recognize(imageSource);
+    // Điều chỉnh tham số để đọc tiếng Việt tốt hơn
+    await worker.setParameters({
+        tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơÀÀÁÂÃÈÉÊÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơ,./-(): ',
+        preserve_interword_spaces: '1',
+    });
+
+    const ret = await worker.recognize(preprocessedImage);
     await worker.terminate();
 
     const rawText = ret.data?.text || '';
     return parseQuotationText(rawText);
+}
+
+// Preprocess ảnh để cải thiện OCR
+async function preprocessImage(imageSource) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Tăng kích thước ảnh 2x để OCR đọc được font nhỏ
+            const scale = 2;
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+
+            // Vẽ ảnh đã scale
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // Chuyển sang grayscale
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                data[i] = avg;     // R
+                data[i + 1] = avg; // G
+                data[i + 2] = avg; // B
+            }
+
+            ctx.putImageData(imageData, 0, 0);
+
+            // Tăng contrast (thresholding nhẹ)
+            const processedData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pData = processedData.data;
+            const threshold = 140;
+
+            for (let i = 0; i < pData.length; i += 4) {
+                const gray = pData[i];
+                const value = gray > threshold ? 255 : 0;
+                pData[i] = value;
+                pData[i + 1] = value;
+                pData[i + 2] = value;
+            }
+
+            ctx.putImageData(processedData, 0, 0);
+
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => resolve(imageSource); // Nếu lỗi thì dùng ảnh gốc
+        img.src = imageSource;
+    });
 }
 
 function parseQuotationText(text) {
