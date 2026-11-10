@@ -1013,21 +1013,7 @@ async function extractWithTesseract(imageSource, onProgress) {
         });
     }
 
-    // Setup logger an toàn - không truyền function trực tiếp
-    if (onProgress) {
-        worker.setParameters({
-            logger: (m) => {
-                if (typeof onProgress === 'function') {
-                    try {
-                        onProgress(m);
-                    } catch (e) {
-                        // Ignore logger errors
-                    }
-                }
-            }
-        });
-    }
-
+    // Không dùng logger để tránh DataCloneError
     const ret = await worker.recognize(preprocessedImage);
     await worker.terminate();
 
