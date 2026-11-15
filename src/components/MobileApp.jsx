@@ -9,7 +9,6 @@ import { exportToPDF } from '../utils/pdfGenerator';
 import '../styles/mobile.css';
 import confetti from 'canvas-confetti';
 import logoSrc from '../assets/logo.png';
-import qrCodeSrc from '../assets/qr-code.png';
 import lotusLogoSrc from '../assets/lotus-logo.png';
 
 const MobileApp = () => {
@@ -21,6 +20,7 @@ const MobileApp = () => {
     const [searchQuery, setSearchQuery] = useState({});
     const [modalImage, setModalImage] = useState(null);
     const [isQuickQuote, setIsQuickQuote] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState('company');
 
     // Dynamic scale based on item count
     const getScaleStyle = () => {
@@ -62,6 +62,18 @@ const MobileApp = () => {
         return items.reduce((sum, item) => sum + getItemTotal(item), 0);
     };
 
+    const getQRUrl = () => {
+        const desc = `Thanh toan bao gia ${new Date().toLocaleDateString('vi-VN')}`;
+        let qrUrl = '';
+        if (paymentMethod === 'company') {
+            qrUrl = `https://img.vietqr.io/image/eximbank-211014851223910-compact2.png?amount=${getGrandTotal()}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent('CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG')}`;
+        } else if (paymentMethod === 'personal') {
+            qrUrl = `https://img.vietqr.io/image/acb-862999888-compact2.png?amount=${getGrandTotal()}&addInfo=${encodeURIComponent(desc)}&accountName=${encodeURIComponent('Nguyễn Xuân Thanh')}`;
+        }
+        // Dùng proxy để tránh CORS
+        return `https://images.weserv.nl/?url=${encodeURIComponent(qrUrl)}`;
+    };
+
     const handleSearch = (itemId, query) => {
         setSearchQuery({ ...searchQuery, [itemId]: query });
     };
@@ -83,7 +95,19 @@ const MobileApp = () => {
         const element = document.getElementById('mobile-container');
         const actionBtn = document.getElementById('export-btn-container');
         const footerInfo = document.getElementById('export-only-footer');
-        
+        const footerQR = document.getElementById('export-only-footer img');
+
+        // Đợi QR load xong
+        if (footerQR) {
+            await new Promise((resolve) => {
+                if (footerQR.complete) resolve();
+                else {
+                    footerQR.onload = resolve;
+                    footerQR.onerror = resolve;
+                }
+            });
+        }
+
         actionBtn.style.opacity = '0';
         footerInfo.style.display = 'flex';
 
@@ -423,45 +447,105 @@ const MobileApp = () => {
 
                 {/* Grand Total Summary - Only in Quick Quote Mode */}
                 {isQuickQuote && items.some(item => item.productId) && (
-                    <div style={{
-                        marginTop: '20px',
-                        padding: '15px',
-                        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-                        borderRadius: '12px',
-                        border: '2px solid #bbf7d0'
-                    }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '14px', fontWeight: '800', color: '#166534' }}>TỔNG THÀNH TIỀN:</span>
-                            <span style={{ fontSize: '20px', fontWeight: '900', color: '#166534' }}>
-                                {formatCurrency(getGrandTotal()).replace('₫', '').trim()}
-                            </span>
+                    <>
+                        <div style={{
+                            marginTop: '20px',
+                            padding: '15px',
+                            background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                            borderRadius: '12px',
+                            border: '2px solid #bbf7d0'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '14px', fontWeight: '800', color: '#166534' }}>TỔNG THÀNH TIỀN:</span>
+                                <span style={{ fontSize: '20px', fontWeight: '900', color: '#166534' }}>
+                                    {formatCurrency(getGrandTotal()).replace('₫', '').trim()}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+
+                        {/* Payment Method Selector */}
+                        <div className="no-export" style={{
+                            marginTop: '15px',
+                            padding: '12px',
+                            background: '#f8fafc',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0'
+                        }}>
+                            <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>
+                                TÀI KHOẢN THANH TOÁN:
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                <button
+                                    onClick={() => setPaymentMethod('company')}
+                                    style={{
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #2563eb',
+                                        background: paymentMethod === 'company' ? '#2563eb' : 'white',
+                                        color: paymentMethod === 'company' ? 'white' : '#2563eb',
+                                        fontWeight: 'bold',
+                                        fontSize: '11px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Công Ty
+                                </button>
+                                <button
+                                    onClick={() => setPaymentMethod('personal')}
+                                    style={{
+                                        padding: '8px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #059669',
+                                        background: paymentMethod === 'personal' ? '#059669' : 'white',
+                                        color: paymentMethod === 'personal' ? 'white' : '#059669',
+                                        fontWeight: 'bold',
+                                        fontSize: '11px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cá Nhân
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* QR Code Preview */}
+                        <div style={{
+                            marginTop: '15px',
+                            padding: '15px',
+                            background: '#f8fafc',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>
+                                MÃ QR THANH TOÁN ({formatCurrency(getGrandTotal()).replace('₫', '').trim()})
+                            </div>
+                            <img
+                                src={getQRUrl()}
+                                alt="QR Thanh Toan"
+                                style={{
+                                    width: '120px',
+                                    height: '120px',
+                                    objectFit: 'contain'
+                                }}
+                            />
+                        </div>
+                    </>
                 )}
 
                 {/* Footer only for Export Image */}
-                <div id="export-only-footer" style={{ 
-                    display: 'none', 
-                    justifyContent: 'space-between', 
+                <div id="export-only-footer" style={{
+                    display: 'none',
+                    flexDirection: 'column',
                     alignItems: 'flex-end',
-                    padding: '15px 15px 5px 15px', 
-                    borderTop: '1px dashed #cbd5e0', 
+                    padding: '15px',
+                    borderTop: '1px dashed #cbd5e0',
                     marginTop: '20px',
                     color: '#64748b',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     fontWeight: 'bold'
                 }}>
                     <div>Hotline: 0943 966 662 | www.sonlotus.vn</div>
-                    <img 
-                        src={qrCodeSrc} 
-                        alt="QR Code" 
-                        style={{ 
-                            width: '60px', 
-                            height: '60px', 
-                            opacity: '0.25',
-                            filter: 'grayscale(40%) brightness(150%)'
-                        }} 
-                    />
                 </div>
             </motion.div>
 
