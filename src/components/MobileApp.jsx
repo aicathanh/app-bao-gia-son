@@ -53,7 +53,7 @@ const MobileApp = () => {
         let total = 0;
         Object.entries(item.quantities || {}).forEach(([size, qty]) => {
             const price = product.p_prices[size] || 0;
-            total += Math.round(price * 1.08) * qty;
+            total += price * qty;
         });
         return total;
     };
@@ -151,8 +151,7 @@ const MobileApp = () => {
                                         let html = '';
                                         sizesWithQty.forEach(([size, qty]) => {
                                             const price = product.p_prices[size] || 0;
-                                            const priceWithVAT = Math.round(price * 1.08);
-                                            const lineTotal = priceWithVAT * qty;
+                                            const lineTotal = price * qty;
                                             html += `
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                                     <div style="font-size: 12px; color: #64748b; font-weight: bold;">
@@ -363,7 +362,6 @@ const MobileApp = () => {
                                     {Object.entries(selectedProduct.p_prices)
                                         .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
                                         .map(([size, price]) => {
-                                            const priceWithVAT = Math.round(price * 1.08);
                                             return (
                                                 <div key={size} style={{
                                                     background: '#f8fafc',
@@ -376,7 +374,7 @@ const MobileApp = () => {
                                                     justifyContent: 'center'
                                                 }}>
                                                     <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'bold', marginBottom: '2px' }}>{size}Kg</div>
-                                                    <div style={{ fontSize: '13px', fontWeight: '900', color: '#2563eb', whiteSpace: 'nowrap' }}>{formatCurrency(priceWithVAT).replace('₫', '').trim()}</div>
+                                                    <div style={{ fontSize: '13px', fontWeight: '900', color: '#2563eb', whiteSpace: 'nowrap' }}>{formatCurrency(price).replace('₫', '').trim()}</div>
                                                 </div>
                                             );
                                         })}
@@ -393,8 +391,7 @@ const MobileApp = () => {
                                                 .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
                                                 .map(([size, price]) => {
                                                     const qty = item.quantities?.[size] || 0;
-                                                    const priceWithVAT = Math.round(price * 1.08);
-                                                    const lineTotal = priceWithVAT * qty;
+                                                    const lineTotal = price * qty;
                                                     return (
                                                         <div key={size} style={{
                                                             background: '#f8fafc',
