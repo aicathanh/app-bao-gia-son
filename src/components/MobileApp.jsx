@@ -314,10 +314,10 @@ const MobileApp = () => {
                             <div className="m-input-group" style={{ position: 'relative', marginBottom: '8px' }}>
                                 <div className="no-export">
                                     <label style={{ fontSize: '10px' }}>CHỌN LOẠI SƠN</label>
-                                    <input 
-                                        className="m-input" 
-                                        type="text" 
-                                        placeholder="Tìm sơn..." 
+                                    <input
+                                        className="m-input"
+                                        type="text"
+                                        placeholder="Tìm sơn..."
                                         value={query || productName}
                                         style={{ padding: '8px 12px', fontSize: '13px' }}
                                         onChange={(e) => {
@@ -325,14 +325,25 @@ const MobileApp = () => {
                                             handleSearch(item.id, val);
                                             if (!val) clearSelection(item.id);
                                         }}
-                                        onBlur={() => setTimeout(() => handleSearch(item.id, ''), 200)}
+                                        onBlur={() => setTimeout(() => {
+                                            // Chỉ xóa query nếu không có suggestion được chọn
+                                            const results = products.filter(p => p.name.toLowerCase().includes((searchQuery[item.id] || '').toLowerCase()));
+                                            if (results.length === 0) {
+                                                handleSearch(item.id, '');
+                                            }
+                                        }, 300)}
                                     />
                                 </div>
                                 
                                 {filteredProducts.length > 0 && (
                                     <div className="m-search-results no-export">
                                         {filteredProducts.map(p => (
-                                            <div key={p.id} className="m-search-item" onMouseDown={() => selectProduct(item.id, p)}>
+                                            <div
+                                                key={p.id}
+                                                className="m-search-item"
+                                                onMouseDown={() => selectProduct(item.id, p)}
+                                                onTouchStart={() => selectProduct(item.id, p)}
+                                            >
                                                 {p.name}
                                             </div>
                                         ))}
