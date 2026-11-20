@@ -188,9 +188,9 @@ const DesktopApp = () => {
         }
 
         if (includeVAT) {
-            return Math.round(basePrice * 1.08);
+            return basePrice; // Giá JSON đã bao gồm VAT 8%
         }
-        return basePrice;
+        return Math.round(basePrice / 1.08); // Trừ VAT để ra giá gốc
     };
 
     const subtotal = items.reduce((sum, item) => sum + (getPrice(item) * item.quantity), 0);
@@ -546,7 +546,7 @@ const DesktopApp = () => {
                                                             value={item.customPrice ? formatCurrency(getPrice(item)).trim() : ''} 
                                                             onChange={(e) => {
                                                                 const val = parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0;
-                                                                const baseVal = includeVAT ? Math.round(val / 1.08) : val;
+                                                                const baseVal = includeVAT ? val : Math.round(val * 1.08);
                                                                 updateItem(item.id, 'customPrice', baseVal);
                                                             }} 
                                                             style={{ padding: 0 }}
