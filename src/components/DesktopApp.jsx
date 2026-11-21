@@ -231,7 +231,6 @@ const DesktopApp = () => {
             }).join(', ');
 
             const orderData = {
-                id: `ORD-${Date.now()}`,
                 quote_no: customer.quoteId,
                 customer_name: customer.name || 'Khách Vãng Lai',
                 customer_phone: customer.phone,
@@ -243,11 +242,35 @@ const DesktopApp = () => {
                 created_at: new Date().toISOString()
             };
 
-            const { error } = await supabase.from('orders').upsert(orderData);
-            if (error) {
-                console.error('CRM Sync Error Detail:', error);
-                if (showAlert) alert('Lỗi Database: ' + error.message);
-                return false;
+            // Check if quote already exists by quote_no
+            const { data: existing } = await supabase
+                .from('orders')
+                .select('id')
+                .eq('quote_no', customer.quoteId)
+                .eq('salesperson_name', 'Nguyễn Xuân Thanh')
+                .single();
+
+            if (existing) {
+                // Update existing record
+                const { error } = await supabase
+                    .from('orders')
+                    .update(orderData)
+                    .eq('id', existing.id);
+                if (error) {
+                    console.error('CRM Sync Error Detail:', error);
+                    if (showAlert) alert('Lỗi Database: ' + error.message);
+                    return false;
+                }
+            } else {
+                // Insert new record with unique ID
+                const { error } = await supabase
+                    .from('orders')
+                    .insert({ ...orderData, id: `ORD-${Date.now()}` });
+                if (error) {
+                    console.error('CRM Sync Error Detail:', error);
+                    if (showAlert) alert('Lỗi Database: ' + error.message);
+                    return false;
+                }
             }
             if (showAlert) {
                 confetti();
