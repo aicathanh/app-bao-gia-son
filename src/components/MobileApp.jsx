@@ -21,6 +21,7 @@ const MobileApp = () => {
     const [modalImage, setModalImage] = useState(null);
     const [isQuickQuote, setIsQuickQuote] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('company');
+    const [customerName, setCustomerName] = useState('');
 
     // Dynamic scale based on item count
     const getScaleStyle = () => {
@@ -249,6 +250,21 @@ const MobileApp = () => {
                     <ShoppingBag size={parseInt(scale.title)} /> BÁO GIÁ SƠN LOTUS
                 </div>
 
+                {/* Customer Name Display - Only in Quick Quote Mode */}
+                {isQuickQuote && customerName && (
+                    <div style={{
+                        marginTop: '10px',
+                        padding: '10px',
+                        background: '#f0f9ff',
+                        borderRadius: '8px',
+                        border: '1px solid #bae6fd',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{ fontSize: '12px', color: '#64748b', fontWeight: 'bold', marginBottom: '4px' }}>Kính gửi:</div>
+                        <div style={{ fontSize: '16px', color: '#1e293b', fontWeight: '900' }}>{customerName}</div>
+                    </div>
+                )}
+
                 {/* Mode Toggle */}
                 <div className="no-export" style={{ display: 'flex', gap: '8px', marginBottom: '15px' }}>
                     <button
@@ -456,6 +472,34 @@ const MobileApp = () => {
                 {/* Grand Total Summary - Only in Quick Quote Mode */}
                 {isQuickQuote && items.some(item => item.productId) && (
                     <>
+                        {/* Customer Name Input */}
+                        <div className="no-export" style={{
+                            marginTop: '15px',
+                            padding: '12px',
+                            background: '#f8fafc',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0'
+                        }}>
+                            <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>
+                                TÊN KHÁCH HÀNG:
+                            </div>
+                            <input
+                                type="text"
+                                value={customerName}
+                                onChange={(e) => setCustomerName(e.target.value)}
+                                placeholder="Nhập tên khách hàng..."
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    color: '#1e293b'
+                                }}
+                            />
+                        </div>
+
                         <div style={{
                             marginTop: '20px',
                             padding: '15px',
@@ -526,7 +570,7 @@ const MobileApp = () => {
                             textAlign: 'center'
                         }}>
                             <div style={{ fontSize: '10px', fontWeight: 'bold', color: '#475569', marginBottom: '8px' }}>
-                                MÃ QR THANH TOÁN ({formatCurrency(getGrandTotal()).replace('₫', '').trim()})
+                                MÃ QR THANH TOÁN ({formatCurrency(getGrandTotal()).replace('₫', '').trim()} đ)
                             </div>
                             <img
                                 src={getQRUrl()}
@@ -537,6 +581,9 @@ const MobileApp = () => {
                                     objectFit: 'contain'
                                 }}
                             />
+                            <div style={{ fontSize: '9px', color: '#64748b', marginTop: '8px', fontWeight: 'bold' }}>
+                                {paymentMethod === 'company' ? 'STK: 211014851223910 - Eximbank - CÔNG TY BÍCH TRANG' : 'STK: 862999888 - ACB - Nguyễn Xuân Thanh'}
+                            </div>
                         </div>
                     </>
                 )}
@@ -567,9 +614,9 @@ const MobileApp = () => {
                 display: 'flex',
                 gap: '10px'
             }}>
-                <button 
+                <button
                     onClick={handleExportImage}
-                    style={{ 
+                    style={{
                         flex: 1,
                         background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
                         color: 'white',

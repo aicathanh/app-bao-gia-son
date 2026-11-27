@@ -39,11 +39,7 @@ const DesktopApp = () => {
     const [vat, setVat] = useState({ value: 0, note: '', visible: false });
     const [items, setItems] = useState([{ ...defaultItem, id: 1 }]);
     const [today, setToday] = useState(format(new Date(), 'dd/MM/yyyy'));
-    const [notes, setNotes] = useState(() => {
-        const saved = localStorage.getItem('desktop_quotation_notes');
-        if (saved) return saved;
-        return `- Thời gian giao hàng: 2-3 ngày kể từ ngày xác nhận đơn hàng\n- Thanh toán: Đặt cọc 50% đối với các đơn hàng từ 10 triệu đồng. Thanh toán 100% trước khi giao hàng\nSTK: 211014851223910 - Ngân hàng Eximbank - CN TP.HCM - CÔNG TY TNHH SẢN XUẤT THƯƠNG MẠI DỊCH VỤ BÍCH TRANG\nSTK: 862 999 888 - ACB - Nguyễn Xuân Thanh`;
-    });
+    const [notes, setNotes] = useState(`- Tỷ lệ pha sơn 2K: 1kg sơn + 100g (10%) đóng rắn + 100g (10%) nước\n- Giá đã bao gồm VAT\n- Miễn phí vận chuyển cho đơn hàng từ 5 triệu\n- Giao hàng: Trong vòng 1-2 ngày kể từ ngày đặt hàng\n- Hình thức thanh toán: Thanh toán trước khi giao hàng`);
     const [paymentMethod, setPaymentMethod] = useState('company');
     const [customerList, setCustomerList] = useState([]);
     const notesRef = useRef(null);
@@ -56,11 +52,6 @@ const DesktopApp = () => {
             titleRef.current.style.height = `${titleRef.current.scrollHeight}px`;
         }
     }, [signerTitle, docType]);
-
-    // Auto-save notes to localStorage whenever they change
-    useEffect(() => {
-        localStorage.setItem('desktop_quotation_notes', notes);
-    }, [notes]);
 
     // Fetch past customer list from Supabase for autocomplete
     useEffect(() => {
@@ -211,7 +202,6 @@ const DesktopApp = () => {
     };
 
     const syncToCRM = async (showAlert = false) => {
-        localStorage.setItem('desktop_quotation_notes', notes);
         try {
             const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
             const supabaseUrl = 'https://zbnnctvggpupdnjmydcu.supabase.co';
